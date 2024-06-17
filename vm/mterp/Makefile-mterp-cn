@@ -1,0 +1,45 @@
+# 版权所有 (C) 2008 安卓开源项目
+#
+# 根据Apache许可证版本2.0（“许可证”）授权；
+# 除非符合许可证，否则您不得使用此文件。
+# 您可以在以下网址获取许可证副本：
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# 除非适用法律要求或书面同意，否则按“原样”分发本软件，
+# 不作任何形式的明示或暗示的保证或条件。
+# 请参见许可证中管理权限和限制的条款。
+
+#
+# Makefile为Dalvik模块化解释器。这目前还未整合入构建系统。
+#
+
+SHELL := /bin/sh
+
+# 构建系统设定TARGET_ARCH=arm，但我们需要精确的架构。
+# 对于ARM平台的基本假设是ARMv5TE，但我们可能需要支持更旧的ARMv4设备，
+# 或使用ARMv6或VFP的特殊功能。模拟器构建是“桌面”。
+#
+# 为所有目标生成源代码：
+# for arch in desktop armv5te; do TARGET_ARCH_EXT=$arch make -f Makefile-mterp; done
+#
+#TARGET_ARCH_EXT := armv5te
+
+OUTPUT_DIR := out
+
+# 为生成的文件积累所有可能的依赖项，非常保守地处理。
+# 如果它不是“out”中的一个生成文件，假设它是一个依赖项。
+SOURCE_DEPS := \
+	$(shell find . -path ./$(OUTPUT_DIR) -prune -o -type f -print)
+
+# 脚本生成的源文件。总是有一个C文件和一个汇编文件，
+# 虽然实际上其中一个可能是空的。
+GEN_SOURCES := \
+	$(OUTPUT_DIR)/InterpC-$(TARGET_ARCH_EXT).c \
+	$(OUTPUT_DIR)/InterpAsm-$(TARGET_ARCH_EXT).S
+
+target: $(GEN_SOURCES)
+
+$(GEN_SOURCES): $(SOURCE_DEPS)
+	@mkdir -p out
+	./gen-mterp.py $(TARGET_ARCH_EXT) $(OUTPUT_DIR)
