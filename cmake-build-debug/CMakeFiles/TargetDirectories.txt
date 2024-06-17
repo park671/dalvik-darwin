@@ -1,6 +1,0 @@
-/Users/parkyu/CLionProjects/dalvik-darwin-c99/cmake-build-debug/CMakeFiles/dalvik_darwin_ashmem.dir
-/Users/parkyu/CLionProjects/dalvik-darwin-c99/cmake-build-debug/CMakeFiles/dalvik_darwin_libcutils.dir
-/Users/parkyu/CLionProjects/dalvik-darwin-c99/cmake-build-debug/CMakeFiles/dalvik_darwin_vm.dir
-/Users/parkyu/CLionProjects/dalvik-darwin-c99/cmake-build-debug/CMakeFiles/dalvik_darwin_c99.dir
-/Users/parkyu/CLionProjects/dalvik-darwin-c99/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/parkyu/CLionProjects/dalvik-darwin-c99/cmake-build-debug/CMakeFiles/rebuild_cache.dir
