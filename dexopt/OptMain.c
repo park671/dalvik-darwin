@@ -468,17 +468,31 @@ bail:
  * Main entry point.  Decide where to go.
  */
 int main(int argc, char *const argv[]) {
+    LOGD("[+] dexopt (android 1.6)\n");
+    LOGD("[+] rebuild on darwin by park.yu\n");
     set_process_name("dexopt");
 
     setvbuf(stdout, NULL, _IONBF, 0);
 
-    if (argc > 1) {
-        if (strcmp(argv[1], "--zip") == 0)
-            return fromZip(argc, argv);
-        else if (strcmp(argv[1], "--dex") == 0)
-            return fromDex(argc, argv);
+    LOGD("argc=%d\n", argc);
+    int i;
+    for (i = 0; i < argc; i++) {
+        LOGD("argv[%d]=%s\n", i, argv[i]);
     }
 
-    fprintf(stderr, "Usage: don't use this\n");
-    return 1;
+    if (argc <= 1) {
+        fprintf(stderr, "Usage: don't use this\n");
+        return 1;
+    }
+
+    int result = 0;
+    if (strcmp(argv[1], "--zip") == 0) {
+        LOGD("[+] dexopt zip mode\n");
+        result = fromZip(argc, argv);
+    } else if (strcmp(argv[1], "--dex") == 0) {
+        LOGD("[+] dexopt dex mode\n");
+        result = fromDex(argc, argv);
+    }
+    LOGD("[+] dexopt finish exit:%d\n", result);
+    return result;
 }
