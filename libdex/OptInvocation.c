@@ -87,7 +87,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
     cp = absoluteFile + 1;
     while (*cp != '\0') {
         if (*cp == '/') {
-            *cp = '@';
+            *cp = '_';
         }
         cp++;
     }
@@ -96,7 +96,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
      */
     dataRoot = getenv("ANDROID_DATA");
     if (dataRoot == NULL)
-        dataRoot = "/data";
+        dataRoot = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/data";
     snprintf(nameBuf, kBufLen, "%s/%s", dataRoot, kDexCachePath);
 
     /* Tack on the file name for the actual cache file path.

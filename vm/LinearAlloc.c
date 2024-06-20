@@ -75,7 +75,7 @@ guard the pages on debug builds.  Handy when tracking down corruption.
 
 /* in case limits.h doesn't have it; must be a power of 2 */
 #ifndef PAGESIZE
-# define PAGESIZE           4096
+# define PAGESIZE           16384
 #endif
 
 

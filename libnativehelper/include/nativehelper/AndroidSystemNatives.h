@@ -40,8 +40,6 @@ int register_org_apache_harmony_dalvik_NativeTestTarget(JNIEnv* env);
 
 int register_dalvik_system_TouchDex(JNIEnv* env);
 
-int register_org_apache_harmony_xml_ExpatParser(JNIEnv *env);
-
 int register_java_io_File(JNIEnv* env);
 int register_java_io_FileDescriptor(JNIEnv* env);
 int register_java_io_ObjectOutputStream(JNIEnv* env);
@@ -56,48 +54,13 @@ int register_java_lang_ProcessManager(JNIEnv* env);
 int register_java_lang_StrictMath(JNIEnv* env);
 int register_java_lang_System(JNIEnv* env);
 
-int register_org_apache_harmony_luni_platform_OSFileSystem(JNIEnv* env);
-int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv* env);
-int register_org_apache_harmony_luni_platform_OSNetworkSystem(JNIEnv* env);
-int register_org_apache_harmony_nio_AddressUtil(JNIEnv* env);
-int register_org_apache_harmony_text_BidiWrapper(JNIEnv *env);
-
-int register_org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl(JNIEnv *env);
-int register_org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl(JNIEnv *env);
-int register_org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl(JNIEnv *env);
-int register_org_openssl_NativeBN(JNIEnv *env);
-int register_org_apache_harmony_xnet_provider_jsse_NativeCrypto(JNIEnv *env);
-
-int register_java_util_jar_JarFile(JNIEnv* env);
-int register_java_util_zip_Adler32(JNIEnv* env);
-int register_java_util_zip_CRC32(JNIEnv* env);
-int register_java_util_zip_Deflater(JNIEnv* env);
-int register_java_util_zip_Inflater(JNIEnv* env);
-int register_java_util_zip_ZipFile(JNIEnv* env);
 int register_java_net_InetAddress(JNIEnv* env);
 int register_java_net_NetworkInterface(JNIEnv* env);
 
 int register_org_apache_harmony_luni_util_fltparse(JNIEnv *env);
 int register_org_apache_harmony_luni_util_NumberConvert(JNIEnv *env);
 
-int register_com_ibm_icu4jni_converters_NativeConverter(JNIEnv* env);
-int register_com_ibm_icu4jni_lang_UCharacter(JNIEnv* env);
-int register_com_ibm_icu4jni_text_NativeCollator(JNIEnv* env);
-int register_com_ibm_icu4jni_text_NativeBreakIterator(JNIEnv* env);
-int register_com_ibm_icu4jni_text_NativeDecimalFormat(JNIEnv* env);
-int register_com_ibm_icu4jni_regex_NativeRegEx(JNIEnv* env);
-int register_com_ibm_icu4jni_util_Resources(JNIEnv* env);
-int register_com_ibm_icu4jni_text_NativeRBNF(JNIEnv* env);
-
 int register_sun_misc_Unsafe(JNIEnv* env);
-
-int register_SQLite_Database(JNIEnv* env);
-int register_SQLite_Vm(JNIEnv* env);
-int register_SQLite_FunctionContext(JNIEnv* env);
-int register_SQLite_Stmt(JNIEnv* env);
-int register_SQLite_Blob(JNIEnv* env);
-
-int register_org_openssl_NativeBN(JNIEnv* env);
 
 #ifdef __cplusplus
 }

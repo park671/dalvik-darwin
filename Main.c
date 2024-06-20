@@ -140,6 +140,8 @@ bail:
  */
 int main(int argc, char* const argv[])
 {
+    fprintf(stdout, "[+] dalvik vm on android 1.6\n");
+    fprintf(stdout, "[+] rebuild on darwin by park.yu\n");
     assert(sizeof(char *) == sizeof(u_int64_t));
     assert(sizeof(uintptr_t) == sizeof(u_int64_t));
     //ensure 64-bit ptr

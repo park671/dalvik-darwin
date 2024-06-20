@@ -34,7 +34,7 @@
 #ifdef HAVE_ANDROID_OS
 # define UPDATE_MAGIC_PAGE      1
 # ifndef PAGESIZE
-#  define PAGESIZE              4096
+#  define PAGESIZE              16384
 # endif
 #endif
 

@@ -122,7 +122,7 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
         fd = dvmOpenCachedDexFile(fileName, cachedName,
                 dexGetZipEntryModTime(&archive, entry),
                 dexGetZipEntryCrc32(&archive, entry),
-                /*isBootstrap=*/false, &newFile, /*createIfMissing=*/false);
+                /*isBootstrap=*/false, &newFile, /*createIfMissing=*/true);
         LOGV("dvmOpenCachedDexFile returned fd %d\n", fd);
         if (fd < 0) {
             result = DEX_CACHE_STALE;

@@ -37,7 +37,7 @@
 /* DEX file magic number */
 #define DEX_MAGIC       "dex\n"
 /* version, encoded in 4 bytes of ASCII */
-#define DEX_MAGIC_VERS  "039\0"
+#define DEX_MAGIC_VERS  "035\0"
 
 /* same, but for optimized DEX header */
 #define DEX_OPT_MAGIC   "dey\n"

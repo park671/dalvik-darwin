@@ -3,6 +3,8 @@
  *
  * JNI helper functions.
  */
+#include <Bits.h>
+
 #include "jni.h"
 #include "AndroidSystemNatives.h"
 
@@ -46,73 +48,14 @@ int jniRegisterSystemMethods(JNIEnv* env)
     if (register_java_lang_System(env) != 0)
         goto bail;
 
-    if (register_org_apache_harmony_luni_platform_OSFileSystem(env) != 0)
-        goto bail;
-    if (register_org_apache_harmony_luni_platform_OSMemory(env) != 0)
-        goto bail;
-    if (register_org_apache_harmony_luni_platform_OSNetworkSystem(env) != 0)
-        goto bail;
-    if (register_org_apache_harmony_nio_AddressUtil(env) != 0)
-        goto bail;
     if (register_org_apache_harmony_luni_util_fltparse(env) != 0)
         goto bail;
     if (register_org_apache_harmony_luni_util_NumberConvert(env) != 0)
-        goto bail;
-    if (register_org_apache_harmony_text_BidiWrapper(env) != 0)
-        goto bail;
-
-    if (register_org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl(env) != 0)
-        goto bail;
-    if (register_org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl(env) != 0)
-        goto bail;
-    if (register_org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl(env) != 0)
-        goto bail;
-
-    if (register_org_openssl_NativeBN(env) != 0)
-        goto bail;
-    if (register_org_apache_harmony_xnet_provider_jsse_NativeCrypto(env) != 0)
-        goto bail;
-
-    if (register_java_util_zip_Adler32(env) != 0)
-        goto bail;
-    if (register_java_util_zip_CRC32(env) != 0)
-        goto bail;
-    if (register_java_util_zip_Deflater(env) != 0)
-        goto bail;
-    if (register_java_util_zip_Inflater(env) != 0)
         goto bail;
 
     if (register_java_net_InetAddress(env) != 0)
         goto bail;
     if (register_java_net_NetworkInterface(env) != 0)
-        goto bail;
-
-    if (register_com_ibm_icu4jni_text_NativeBreakIterator(env) != 0)
-        goto bail;
-    if (register_com_ibm_icu4jni_text_NativeDecimalFormat(env) != 0)
-        goto bail;
-    if (register_com_ibm_icu4jni_text_NativeCollator(env) != 0)
-        goto bail;
-    if (register_com_ibm_icu4jni_converters_NativeConverter(env) != 0)
-        goto bail;
-    if (register_com_ibm_icu4jni_regex_NativeRegEx(env) != 0)
-        goto bail;
-    if (register_com_ibm_icu4jni_lang_UCharacter(env) != 0)
-        goto bail;
-    if (register_com_ibm_icu4jni_util_Resources(env) != 0)
-        goto bail;
-    if (register_com_ibm_icu4jni_text_NativeRBNF(env) != 0)
-        goto bail;
-
-    if (register_SQLite_Database(env) != 0)
-        goto bail;
-    if (register_SQLite_Vm(env) != 0)
-        goto bail;
-    if (register_SQLite_FunctionContext(env) != 0)
-        goto bail;
-    if (register_SQLite_Stmt(env) != 0)
-        goto bail;
-    if (register_SQLite_Blob(env) != 0)
         goto bail;
 
     /*
@@ -122,13 +65,11 @@ int jniRegisterSystemMethods(JNIEnv* env)
 
     if (register_dalvik_system_TouchDex(env) != 0)
         goto bail;
-
-    if (register_org_apache_harmony_xml_ExpatParser(env) != 0)
-        goto bail;
     
     result = 0;
 
 bail:
+    LOGE("reg native method error!");
     (*env)->PopLocalFrame(env, NULL);
     return result;
 }

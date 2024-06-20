@@ -38,11 +38,13 @@
  *
  * Currently defined in ../include/nativehelper/AndroidSystemNatives.h
  */
-extern int jniRegisterSystemMethods(JNIEnv* env);
+extern int jniRegisterSystemMethods(JNIEnv *env);
 
 /* fwd */
-static bool registerSystemNatives(JNIEnv* pEnv);
+static bool registerSystemNatives(JNIEnv *pEnv);
+
 static bool dvmInitJDWP(void);
+
 static bool dvmInitZygote(void);
 
 
@@ -54,10 +56,9 @@ struct DvmGlobals gDvm;
  *
  * We follow the tradition of unhyphenated compound words.
  */
-static void dvmUsage(const char* progName)
-{
+static void dvmUsage(const char *progName) {
     dvmFprintf(stderr, "%s: [options] class [argument ...]\n", progName);
-    dvmFprintf(stderr, "%s: [options] -jar file.jar [argument ...]\n",progName);
+    dvmFprintf(stderr, "%s: [options] -jar file.jar [argument ...]\n", progName);
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "The following standard options are recognized:\n");
     dvmFprintf(stderr, "  -classpath classpath\n");
@@ -69,7 +70,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -esa\n");
     dvmFprintf(stderr, "  -dsa\n");
     dvmFprintf(stderr,
-                "   (-enablesystemassertions, -disablesystemassertions)\n");
+               "   (-enablesystemassertions, -disablesystemassertions)\n");
     dvmFprintf(stderr, "  -showversion\n");
     dvmFprintf(stderr, "  -help\n");
     dvmFprintf(stderr, "\n");
@@ -80,18 +81,18 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -XmsN  (min heap, must be multiple of 1K, >= 1MB)\n");
     dvmFprintf(stderr, "  -XmxN  (max heap, must be multiple of 1K, >= 2MB)\n");
     dvmFprintf(stderr, "  -XssN  (stack size, >= %dKB, <= %dKB)\n",
-        kMinStackSize / 1024, kMaxStackSize / 1024);
+               kMinStackSize / 1024, kMaxStackSize / 1024);
     dvmFprintf(stderr, "  -Xverify:{none,remote,all}\n");
     dvmFprintf(stderr, "  -Xrs\n");
     dvmFprintf(stderr,
-                "  -Xint  (extended to accept ':portable' and ':fast')\n");
+               "  -Xint  (extended to accept ':portable' and ':fast')\n");
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "These are unique to Dalvik:\n");
     dvmFprintf(stderr, "  -Xzygote\n");
     dvmFprintf(stderr, "  -Xdexopt:{none,verified,all}\n");
     dvmFprintf(stderr, "  -Xnoquithandler\n");
     dvmFprintf(stderr,
-                "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
+               "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
     dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
@@ -100,13 +101,13 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
 #ifdef WITH_DEBUGGER
-        " debugger"
+               " debugger"
 #endif
 #ifdef WITH_PROFILER
-        " profiler"
+               " profiler"
 #endif
 #ifdef WITH_MONITOR_TRACKING
-        " monitor_tracking"
+               " monitor_tracking"
 #endif
 #ifdef WITH_DEADLOCK_PREDICTION
         " deadlock_prediction"
@@ -121,16 +122,16 @@ static void dvmUsage(const char* progName)
         " hprof_stack_unreachable"
 #endif
 #ifdef WITH_ALLOC_LIMITS
-        " alloc_limits"
+               " alloc_limits"
 #endif
 #ifdef WITH_TRACKREF_CHECKS
-        " trackref_checks"
+               " trackref_checks"
 #endif
 #ifdef WITH_INSTR_CHECKS
-        " instr_checks"
+               " instr_checks"
 #endif
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
-        " extra_object_validation"
+               " extra_object_validation"
 #endif
 #ifdef WITH_DALVIK_ASSERT
         " dalvik_assert"
@@ -139,7 +140,7 @@ static void dvmUsage(const char* progName)
         " jni_stack_check"
 #endif
 #ifdef EASY_GDB
-        " easy_gdb"
+               " easy_gdb"
 #endif
 #ifdef CHECK_MUTEX
         " check_mutex"
@@ -167,30 +168,28 @@ static void dvmUsage(const char* progName)
 /*
  * Show helpful information on JDWP options.
  */
-static void showJdwpHelp(void)
-{
+static void showJdwpHelp(void) {
     dvmFprintf(stderr,
-        "Example: -Xrunjdwp:transport=dt_socket,address=8000,server=y\n");
+               "Example: -Xrunjdwp:transport=dt_socket,address=8000,server=y\n");
     dvmFprintf(stderr,
-        "Example: -Xrunjdwp:transport=dt_socket,address=localhost:6500,server=n\n");
+               "Example: -Xrunjdwp:transport=dt_socket,address=localhost:6500,server=n\n");
 }
 
 /*
  * Show version and copyright info.
  */
-static void showVersion(void)
-{
+static void showVersion(void) {
     dvmFprintf(stdout, "DalvikVM version %d.%d.%d\n",
-        DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
-    dvmFprintf(stdout, 
-        "Copyright (C) 2007 The Android Open Source Project\n\n"
-        "This software is built from source code licensed under the "
-        "Apache License,\n"
-        "Version 2.0 (the \"License\"). You may obtain a copy of the "
-        "License at\n\n"
-        "     http://www.apache.org/licenses/LICENSE-2.0\n\n"
-        "See the associated NOTICE file for this software for further "
-        "details.\n");
+               DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
+    dvmFprintf(stdout,
+               "Copyright (C) 2007 The Android Open Source Project\n\n"
+               "This software is built from source code licensed under the "
+               "Apache License,\n"
+               "Version 2.0 (the \"License\"). You may obtain a copy of the "
+               "License at\n\n"
+               "     http://www.apache.org/licenses/LICENSE-2.0\n\n"
+               "See the associated NOTICE file for this software for further "
+               "details.\n");
 }
 
 /*
@@ -209,8 +208,7 @@ static void showVersion(void)
  * Returns 0 (a useless size) if "s" is malformed or specifies a low or
  * non-evenly-divisible value.
  */
-static unsigned int dvmParseMemOption(const char *s, unsigned int div)
-{
+static unsigned int dvmParseMemOption(const char *s, unsigned int div) {
     /* strtoul accepts a leading [+-], which we don't want,
      * so make sure our string starts with a decimal digit.
      */
@@ -218,7 +216,7 @@ static unsigned int dvmParseMemOption(const char *s, unsigned int div)
         const char *s2;
         unsigned int val;
 
-        val = (unsigned int)strtoul(s, (char **)&s2, 10);
+        val = (unsigned int) strtoul(s, (char **) &s2, 10);
         if (s2 != s) {
             /* s2 should be pointing just after the number.
              * If this is the end of the string, the user
@@ -256,7 +254,7 @@ static unsigned int dvmParseMemOption(const char *s, unsigned int div)
                     } else {
                         /* Clamp to a multiple of 1024.
                          */
-                        val = UINT_MAX & ~(1024-1);
+                        val = UINT_MAX & ~(1024 - 1);
                     }
                 } else {
                     /* There's more than one character after the
@@ -295,8 +293,7 @@ static unsigned int dvmParseMemOption(const char *s, unsigned int div)
  *
  * The "transport" option is required, as is "address" if server=n.
  */
-static bool handleJdwpOption(const char* name, const char* value)
-{
+static bool handleJdwpOption(const char *name, const char *value) {
     if (strcmp(name, "transport") == 0) {
         if (strcmp(value, "dt_socket") == 0) {
             gDvm.jdwpTransport = kJdwpTransportSocket;
@@ -326,15 +323,15 @@ static bool handleJdwpOption(const char* name, const char* value)
         }
     } else if (strcmp(name, "address") == 0) {
         /* this is either <port> or <host>:<port> */
-        const char* colon = strchr(value, ':');
-        char* end;
+        const char *colon = strchr(value, ':');
+        char *end;
         long port;
 
         if (colon != NULL) {
             free(gDvm.jdwpHost);
-            gDvm.jdwpHost = (char*) malloc(colon - value +1);
+            gDvm.jdwpHost = (char *) malloc(colon - value + 1);
             strncpy(gDvm.jdwpHost, value, colon - value +1);
-            gDvm.jdwpHost[colon-value] = '\0';
+            gDvm.jdwpHost[colon - value] = '\0';
             value = colon + 1;
         }
         if (*value == '\0') {
@@ -350,8 +347,7 @@ static bool handleJdwpOption(const char* name, const char* value)
     } else if (strcmp(name, "launch") == 0 ||
                strcmp(name, "onthrow") == 0 ||
                strcmp(name, "oncaught") == 0 ||
-               strcmp(name, "timeout") == 0)
-    {
+               strcmp(name, "timeout") == 0) {
         /* valid but unsupported */
         LOGI("Ignoring JDWP option '%s'='%s'\n", name, value);
     } else {
@@ -365,18 +361,17 @@ static bool handleJdwpOption(const char* name, const char* value)
  * Parse the latter half of a -Xrunjdwp/-agentlib:jdwp= string, e.g.:
  * "transport=dt_socket,address=8000,server=y,suspend=n"
  */
-static bool parseJdwpOptions(const char* str)
-{
-    char* mangle = strdup(str);
-    char* name = mangle;
+static bool parseJdwpOptions(const char *str) {
+    char *mangle = strdup(str);
+    char *name = mangle;
     bool result = false;
 
     /*
      * Process all of the name=value pairs.
      */
     while (true) {
-        char* value;
-        char* comma;
+        char *value;
+        char *comma;
 
         value = strchr(name, '=');
         if (value == NULL) {
@@ -384,7 +379,7 @@ static bool parseJdwpOptions(const char* str)
             goto bail;
         }
 
-        comma = strchr(name, ',');      // use name, not value, for safety
+        comma = strchr(name, ','); // use name, not value, for safety
         if (comma != NULL) {
             if (comma < value) {
                 LOGE("JDWP opts: found comma before '=' in '%s'\n", mangle);
@@ -393,7 +388,7 @@ static bool parseJdwpOptions(const char* str)
             *comma = '\0';
         }
 
-        *value++ = '\0';        // stomp the '='
+        *value++ = '\0'; // stomp the '='
 
         if (!handleJdwpOption(name, value))
             goto bail;
@@ -402,7 +397,7 @@ static bool parseJdwpOptions(const char* str)
             /* out of options */
             break;
         }
-        name = comma+1;
+        name = comma + 1;
     }
 
     /*
@@ -440,9 +435,8 @@ bail:
  * enable assertions for a package and then disable them for one class in
  * the package.
  */
-static bool enableAssertions(const char* pkgOrClass, bool enable)
-{
-    AssertionControl* pCtrl = &gDvm.assertionCtrl[gDvm.assertionCtrlCount++];
+static bool enableAssertions(const char *pkgOrClass, bool enable) {
+    AssertionControl *pCtrl = &gDvm.assertionCtrl[gDvm.assertionCtrlCount++];
     pCtrl->enable = enable;
 
     if (pkgOrClass == NULL) {
@@ -457,7 +451,7 @@ static bool enableAssertions(const char* pkgOrClass, bool enable)
             pCtrl->pkgOrClass = strdup("");
             pCtrl->pkgOrClassLen = 0;
         } else {
-            pCtrl->pkgOrClass = dvmDotToSlash(pkgOrClass+1);    // skip ':'
+            pCtrl->pkgOrClass = dvmDotToSlash(pkgOrClass + 1); // skip ':'
             if (pCtrl->pkgOrClass == NULL) {
                 /* can happen if class name includes an illegal '/' */
                 LOGW("Unable to process assertion arg '%s'\n", pkgOrClass);
@@ -465,10 +459,10 @@ static bool enableAssertions(const char* pkgOrClass, bool enable)
             }
 
             int len = strlen(pCtrl->pkgOrClass);
-            if (len >= 3 && strcmp(pCtrl->pkgOrClass + len-3, "///") == 0) {
+            if (len >= 3 && strcmp(pCtrl->pkgOrClass + len - 3, "///") == 0) {
                 /* mark as package, truncate two of the three slashes */
                 pCtrl->isPackage = true;
-                *(pCtrl->pkgOrClass + len-2) = '\0';
+                *(pCtrl->pkgOrClass + len - 2) = '\0';
                 pCtrl->pkgOrClassLen = len - 2;
             } else {
                 /* just a class */
@@ -494,8 +488,7 @@ static bool enableAssertions(const char* pkgOrClass, bool enable)
  *
  * This must only be called from the main thread during zygote init.
  */
-void dvmLateEnableAssertions(void)
-{
+void dvmLateEnableAssertions(void) {
     if (gDvm.assertionCtrl == NULL) {
         LOGD("Not late-enabling assertions: no assertionCtrl array\n");
         return;
@@ -506,7 +499,7 @@ void dvmLateEnableAssertions(void)
     LOGD("Late-enabling assertions\n");
 
     /* global enable for all but system */
-    AssertionControl* pCtrl = gDvm.assertionCtrl;
+    AssertionControl *pCtrl = gDvm.assertionCtrl;
     pCtrl->pkgOrClass = strdup("");
     pCtrl->pkgOrClassLen = 0;
     pCtrl->isPackage = false;
@@ -518,8 +511,7 @@ void dvmLateEnableAssertions(void)
 /*
  * Release memory associated with the AssertionCtrl array.
  */
-static void freeAssertionCtrl(void)
-{
+static void freeAssertionCtrl(void) {
     int i;
 
     for (i = 0; i < gDvm.assertionCtrlCount; i++)
@@ -539,9 +531,8 @@ static void freeAssertionCtrl(void)
  * Returns 0 on success, -1 on failure, and 1 for the special case of
  * "-version" where we want to stop without showing an error message.
  */
-static int dvmProcessOptions(int argc, const char* const argv[],
-    bool ignoreUnrecognized)
-{
+static int dvmProcessOptions(int argc, const char *const argv[],
+                             bool ignoreUnrecognized) {
     int i;
 
     LOGV("VM options (%d):\n", argc);
@@ -556,7 +547,7 @@ static int dvmProcessOptions(int argc, const char* const argv[],
     assert(gDvm.assertionCtrl == NULL);
     if (argc > 0) {
         gDvm.assertionCtrl =
-            (AssertionControl*) malloc(sizeof(AssertionControl) * argc);
+                (AssertionControl *) malloc(sizeof(AssertionControl) * argc);
         if (gDvm.assertionCtrl == NULL)
             return -1;
         assert(gDvm.assertionCtrlCount == 0);
@@ -566,7 +557,6 @@ static int dvmProcessOptions(int argc, const char* const argv[],
         if (strcmp(argv[i], "-help") == 0) {
             /* show usage and stop */
             return -1;
-
         } else if (strcmp(argv[i], "-version") == 0) {
             /* show version and stop */
             showVersion();
@@ -574,23 +564,19 @@ static int dvmProcessOptions(int argc, const char* const argv[],
         } else if (strcmp(argv[i], "-showversion") == 0) {
             /* show version and continue */
             showVersion();
-
         } else if (strcmp(argv[i], "-classpath") == 0 ||
-                   strcmp(argv[i], "-cp") == 0)
-        {
+                   strcmp(argv[i], "-cp") == 0) {
             /* set classpath */
-            if (i == argc-1) {
+            if (i == argc - 1) {
                 dvmFprintf(stderr, "Missing classpath path list\n");
                 return -1;
             }
             free(gDvm.classPathStr); /* in case we have compiled-in default */
             gDvm.classPathStr = strdup(argv[++i]);
-
         } else if (strncmp(argv[i], "-Xbootclasspath:",
-                sizeof("-Xbootclasspath:")-1) == 0)
-        {
+                           sizeof("-Xbootclasspath:") - 1) == 0) {
             /* set bootclasspath */
-            const char* path = argv[i] + sizeof("-Xbootclasspath:")-1;
+            const char *path = argv[i] + sizeof("-Xbootclasspath:") - 1;
 
             if (*path == '\0') {
                 dvmFprintf(stderr, "Missing bootclasspath path list\n");
@@ -604,25 +590,22 @@ static int dvmProcessOptions(int argc, const char* const argv[],
              * prepend to the default bootclasspath.  We set the default
              * path earlier.
              */
-
         } else if (strncmp(argv[i], "-D", 2) == 0) {
             /* set property */
             dvmAddCommandLineProperty(argv[i] + 2);
-
         } else if (strcmp(argv[i], "-jar") == 0) {
             // TODO: handle this; name of jar should be in argv[i+1]
             dvmFprintf(stderr, "-jar not yet handled\n");
             assert(false);
-
         } else if (strncmp(argv[i], "-Xms", 4) == 0) {
-            unsigned int val = dvmParseMemOption(argv[i]+4, 1024);
+            unsigned int val = dvmParseMemOption(argv[i] + 4, 1024);
             if (val != 0) {
                 if (val >= kMinHeapStartSize && val <= kMaxHeapSize) {
                     gDvm.heapSizeStart = val;
                 } else {
                     dvmFprintf(stderr,
-                        "Invalid -Xms '%s', range is %dKB to %dKB\n",
-                        argv[i], kMinHeapStartSize/1024, kMaxHeapSize/1024);
+                               "Invalid -Xms '%s', range is %dKB to %dKB\n",
+                               argv[i], kMinHeapStartSize / 1024, kMaxHeapSize / 1024);
                     return -1;
                 }
             } else {
@@ -630,14 +613,14 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xmx", 4) == 0) {
-            unsigned int val = dvmParseMemOption(argv[i]+4, 1024);
+            unsigned int val = dvmParseMemOption(argv[i] + 4, 1024);
             if (val != 0) {
                 if (val >= kMinHeapSize && val <= kMaxHeapSize) {
                     gDvm.heapSizeMax = val;
                 } else {
                     dvmFprintf(stderr,
-                        "Invalid -Xmx '%s', range is %dKB to %dKB\n",
-                        argv[i], kMinHeapSize/1024, kMaxHeapSize/1024);
+                               "Invalid -Xmx '%s', range is %dKB to %dKB\n",
+                               argv[i], kMinHeapSize / 1024, kMaxHeapSize / 1024);
                     return -1;
                 }
             } else {
@@ -645,23 +628,21 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xss", 4) == 0) {
-            unsigned int val = dvmParseMemOption(argv[i]+4, 1);
+            unsigned int val = dvmParseMemOption(argv[i] + 4, 1);
             if (val != 0) {
                 if (val >= kMinStackSize && val <= kMaxStackSize) {
                     gDvm.stackSize = val;
                 } else {
                     dvmFprintf(stderr, "Invalid -Xss '%s', range is %d to %d\n",
-                        argv[i], kMinStackSize, kMaxStackSize);
+                               argv[i], kMinStackSize, kMaxStackSize);
                     return -1;
                 }
             } else {
                 dvmFprintf(stderr, "Invalid -Xss option '%s'\n", argv[i]);
                 return -1;
             }
-
         } else if (strcmp(argv[i], "-verbose") == 0 ||
-            strcmp(argv[i], "-verbose:class") == 0)
-        {
+                   strcmp(argv[i], "-verbose:class") == 0) {
             // JNI spec says "-verbose:gc,class" is valid, but cmd line
             // doesn't work that way; may want to support.
             gDvm.verboseClass = true;
@@ -669,7 +650,6 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             gDvm.verboseJni = true;
         } else if (strcmp(argv[i], "-verbose:gc") == 0) {
             gDvm.verboseGc = true;
-
         } else if (strncmp(argv[i], "-enableassertions", 17) == 0) {
             enableAssertions(argv[i] + 17, true);
         } else if (strncmp(argv[i], "-ea", 3) == 0) {
@@ -679,24 +659,18 @@ static int dvmProcessOptions(int argc, const char* const argv[],
         } else if (strncmp(argv[i], "-da", 3) == 0) {
             enableAssertions(argv[i] + 3, false);
         } else if (strcmp(argv[i], "-enablesystemassertions") == 0 ||
-                   strcmp(argv[i], "-esa") == 0)
-        {
+                   strcmp(argv[i], "-esa") == 0) {
             enableAssertions(NULL, true);
         } else if (strcmp(argv[i], "-disablesystemassertions") == 0 ||
-                   strcmp(argv[i], "-dsa") == 0)
-        {
+                   strcmp(argv[i], "-dsa") == 0) {
             enableAssertions(NULL, false);
-
         } else if (strncmp(argv[i], "-Xcheck:jni", 11) == 0) {
             /* nothing to do now -- was handled during JNI init */
-
         } else if (strcmp(argv[i], "-Xdebug") == 0) {
             /* accept but ignore */
-
         } else if (strncmp(argv[i], "-Xrunjdwp:", 10) == 0 ||
-            strncmp(argv[i], "-agentlib:jdwp=", 15) == 0)
-        {
-            const char* tail;
+                   strncmp(argv[i], "-agentlib:jdwp=", 15) == 0) {
+            const char *tail;
             bool result = false;
 
             if (argv[i][1] == 'X')
@@ -724,7 +698,7 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             else if (strcmp(argv[i] + 9, "all") == 0)
                 gDvm.dexOptMode = OPTIMIZE_MODE_ALL;
             else {
-                dvmFprintf(stderr, "Unrecognized dexopt option '%s'\n",argv[i]);
+                dvmFprintf(stderr, "Unrecognized dexopt option '%s'\n", argv[i]);
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xverify:", 9) == 0) {
@@ -735,21 +709,19 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             else if (strcmp(argv[i] + 9, "all") == 0)
                 gDvm.classVerifyMode = VERIFY_MODE_ALL;
             else {
-                dvmFprintf(stderr, "Unrecognized verify option '%s'\n",argv[i]);
+                dvmFprintf(stderr, "Unrecognized verify option '%s'\n", argv[i]);
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xjnigreflimit:", 15) == 0) {
             int lim = atoi(argv[i] + 15);
             if (lim < 200 || (lim % 100) != 0) {
                 dvmFprintf(stderr, "Bad value for -Xjnigreflimit: '%s'\n",
-                    argv[i]+15);
+                           argv[i] + 15);
                 return -1;
             }
             gDvm.jniGrefLimit = lim;
-
         } else if (strcmp(argv[i], "-Xlog-stdio") == 0) {
             gDvm.logStdio = true;
-
         } else if (strncmp(argv[i], "-Xint", 5) == 0) {
             if (argv[i][5] == ':') {
                 if (strcmp(argv[i] + 6, "portable") == 0)
@@ -758,13 +730,12 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                     gDvm.executionMode = kExecutionModeInterpFast;
                 else {
                     dvmFprintf(stderr,
-                        "Warning: Unrecognized interpreter mode %s\n",argv[i]);
+                               "Warning: Unrecognized interpreter mode %s\n", argv[i]);
                     /* keep going */
                 }
             } else {
                 /* disable JIT -- nothing to do here for now */
             }
-
         } else if (strncmp(argv[i], "-Xdeadlockpredict:", 18) == 0) {
 #ifdef WITH_DEADLOCK_PREDICTION
             if (strcmp(argv[i] + 18, "off") == 0)
@@ -782,16 +753,12 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             if (gDvm.deadlockPredictMode != kDPOff)
                 LOGD("Deadlock prediction enabled (%s)\n", argv[i]+18);
 #endif
-
         } else if (strncmp(argv[i], "-Xstacktracefile:", 17) == 0) {
-            gDvm.stackTraceFile = strdup(argv[i]+17);
-
+            gDvm.stackTraceFile = strdup(argv[i] + 17);
         } else if (strcmp(argv[i], "-Xgenregmap") == 0) {
             gDvm.generateRegisterMaps = true;
-
         } else if (strcmp(argv[i], "-Xcheckdexsum") == 0) {
             gDvm.verifyDexChecksum = true;
-
         } else {
             if (!ignoreUnrecognized) {
                 dvmFprintf(stderr, "Unrecognized option '%s'\n", argv[i]);
@@ -811,9 +778,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
 /*
  * Set defaults for fields altered or modified by arguments.
  */
-static void setCommandLineDefaults()
-{
-    const char* envStr;
+static void setCommandLineDefaults() {
+    const char *envStr;
 
     envStr = getenv("CLASSPATH");
     if (envStr != NULL)
@@ -829,8 +795,8 @@ static void setCommandLineDefaults()
     /* Defaults overridden by -Xms and -Xmx.
      * TODO: base these on a system or application-specific default
      */
-    gDvm.heapSizeStart = 2 * 1024 * 1024;   // Spec says 16MB; too big for us.
-    gDvm.heapSizeMax = 16 * 1024 * 1024;    // Spec says 75% physical mem
+    gDvm.heapSizeStart = 2 * 1024 * 1024; // Spec says 16MB; too big for us.
+    gDvm.heapSizeMax = 16 * 1024 * 1024; // Spec says 75% physical mem
     gDvm.stackSize = kDefaultStackSize;
 
     /* gDvm.jdwpSuspend = true; */
@@ -857,9 +823,8 @@ static void setCommandLineDefaults()
  * Handle a SIGBUS, which frequently occurs because somebody replaced an
  * optimized DEX file out from under us.
  */
-static void busCatcher(int signum, siginfo_t* info, void* context)
-{
-    void* addr = info->si_addr;
+static void busCatcher(int signum, siginfo_t *info, void *context) {
+    void *addr = info->si_addr;
 
     LOGE("Caught a SIGBUS (%d), addr=%p\n", signum, addr);
 
@@ -878,14 +843,13 @@ static void busCatcher(int signum, siginfo_t* info, void* context)
  *
  * This can be disabled with the "-Xrs" flag.
  */
-static void blockSignals()
-{
+static void blockSignals() {
     sigset_t mask;
     int cc;
 
     sigemptyset(&mask);
     sigaddset(&mask, SIGQUIT);
-    sigaddset(&mask, SIGUSR1);      // used to initiate heap dump
+    sigaddset(&mask, SIGUSR1); // used to initiate heap dump
     //sigaddset(&mask, SIGPIPE);
     cc = sigprocmask(SIG_BLOCK, &mask, NULL);
     assert(cc == 0);
@@ -901,15 +865,15 @@ static void blockSignals()
     }
 }
 
+const char *DEFAULT_BOOT_CLASSPATH = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin.jar";
 /*
  * VM initialization.  Pass in any options provided on the command line.
  * Do not pass in the class name or the options for the class.
  *
  * Returns 0 on success.
  */
-int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
-    JNIEnv* pEnv)
-{
+int dvmStartup(int argc, const char *const argv[], bool ignoreUnrecognized,
+               JNIEnv *pEnv) {
     int i, cc;
 
     assert(gDvm.initializing);
@@ -928,6 +892,8 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * Process the option flags (if any).
      */
     cc = dvmProcessOptions(argc, argv, ignoreUnrecognized);
+    gDvm.bootClassPathStr = DEFAULT_BOOT_CLASSPATH;
+    LOGD("[+] bootclasspath:%s\n", DEFAULT_BOOT_CLASSPATH);
     if (cc != 0) {
         if (cc < 0) {
             dvmFprintf(stderr, "\n");
@@ -992,14 +958,14 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * Make sure these exist.  If they don't, we can return a failure out
      * of main and nip the whole thing in the bud.
      */
-    static const char* earlyClasses[] = {
+    static const char *earlyClasses[] = {
         "Ljava/lang/InternalError;",
         "Ljava/lang/StackOverflowError;",
         "Ljava/lang/UnsatisfiedLinkError;",
         "Ljava/lang/NoClassDefFoundError;",
         NULL
     };
-    const char** pClassName;
+    const char **pClassName;
     for (pClassName = earlyClasses; *pClassName != NULL; pClassName++) {
         if (dvmFindSystemClassNoInit(*pClassName) == NULL)
             goto fail;
@@ -1083,9 +1049,8 @@ fail:
  * We need to have gDvm.initializing raised here so that JNI FindClass
  * won't try to use the system/application class loader.
  */
-static bool registerSystemNatives(JNIEnv* pEnv)
-{
-    Thread* self;
+static bool registerSystemNatives(JNIEnv *pEnv) {
+    Thread *self;
 
     /* main thread is always first in list */
     self = gDvm.threadList;
@@ -1093,10 +1058,11 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     /* must set this before allowing JNI-based method registration */
     self->status = THREAD_NATIVE;
 
-    //if (jniRegisterSystemMethods(pEnv) < 0) {
-    //    LOGW("jniRegisterSystemMethods failed\n");
-    //    return false;
-    //}
+    if (jniRegisterSystemMethods(pEnv) < 0) {
+        LOGW("jniRegisterSystemMethods failed\n");
+        return false;
+    }
+    LOGD("[+] register system native method success!");
 
     /* back to run mode */
     self->status = THREAD_RUNNING;
@@ -1108,10 +1074,9 @@ static bool registerSystemNatives(JNIEnv* pEnv)
 /*
  * Do zygote-mode-only initialization.
  */
-static bool dvmInitZygote(void)
-{
+static bool dvmInitZygote(void) {
     /* zygote goes into its own process group */
-    setpgid(0,0);
+    setpgid(0, 0);
 
     return true;
 }
@@ -1120,11 +1085,10 @@ static bool dvmInitZygote(void)
  * Do non-zygote-mode initialization.  This is done during VM init for
  * standard startup, or after a "zygote fork" when creating a new process.
  */
-bool dvmInitAfterZygote(void)
-{
+bool dvmInitAfterZygote(void) {
     u8 startHeap, startQuit, startJdwp;
     u8 endHeap, endQuit, endJdwp;
-    
+
     startHeap = dvmGetRelativeTimeUsec();
 
     /*
@@ -1164,8 +1128,8 @@ bool dvmInitAfterZygote(void)
     endJdwp = dvmGetRelativeTimeUsec();
 
     LOGV("thread-start heap=%d quit=%d jdwp=%d total=%d usec\n",
-        (int)(endHeap-startHeap), (int)(endQuit-startQuit),
-        (int)(endJdwp-startJdwp), (int)(endJdwp-startHeap));
+         (int)(endHeap-startHeap), (int)(endQuit-startQuit),
+         (int)(endJdwp-startJdwp), (int)(endJdwp-startHeap));
 
     return true;
 }
@@ -1189,8 +1153,7 @@ bool dvmInitAfterZygote(void)
  *
  * This gets more complicated with a nonzero value for "timeout".
  */
-static bool dvmInitJDWP(void)
-{
+static bool dvmInitJDWP(void) {
     assert(!gDvm.zygote);
 
 #ifndef WITH_DEBUGGER
@@ -1207,7 +1170,7 @@ static bool dvmInitJDWP(void)
         JdwpStartupParams params;
 
         if (gDvm.jdwpHost != NULL) {
-            if (strlen(gDvm.jdwpHost) >= sizeof(params.host)-1) {
+            if (strlen(gDvm.jdwpHost) >= sizeof(params.host) - 1) {
                 LOGE("ERROR: hostname too long: '%s'\n", gDvm.jdwpHost);
                 return false;
             }
@@ -1256,9 +1219,8 @@ static bool dvmInitJDWP(void)
  *
  * Returns 0 on success.
  */
-int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
-    DexClassVerifyMode verifyMode, int dexoptFlags)
-{
+int dvmPrepForDexOpt(const char *bootClassPath, DexOptimizerMode dexOptMode,
+                     DexClassVerifyMode verifyMode, int dexoptFlags) {
     gDvm.initializing = true;
     gDvm.optimizing = true;
 
@@ -1325,8 +1287,7 @@ fail:
  * same thread that started the VM, a/k/a the main thread, but we don't
  * want to assume that.)
  */
-void dvmShutdown(void)
-{
+void dvmShutdown(void) {
     LOGV("VM shutting down\n");
 
     if (CALC_CACHE_STATS)
@@ -1401,8 +1362,7 @@ void dvmShutdown(void)
  * fprintf() wrapper that calls through the JNI-specified vfprintf hook if
  * one was specified.
  */
-int dvmFprintf(FILE* fp, const char* format, ...)
-{
+int dvmFprintf(FILE *fp, const char *format, ...) {
     va_list args;
     int result;
 
@@ -1420,11 +1380,10 @@ int dvmFprintf(FILE* fp, const char* format, ...)
  * Abort the VM.  We get here on fatal errors.  Try very hard not to use
  * this; whenever possible, return an error to somebody responsible.
  */
-void dvmAbort(void)
-{
+void dvmAbort(void) {
     LOGE("VM aborting\n");
 
-    fflush(NULL);       // flush all open file buffers
+    fflush(NULL); // flush all open file buffers
 
     /* JNI-supplied abort hook gets right of first refusal */
     if (gDvm.abortHook != NULL)
@@ -1440,7 +1399,7 @@ void dvmAbort(void)
      * We can also trivially tell the difference between a VM crash and
      * a deliberate abort by looking at the fault address.
      */
-    *((char*)0xdeadd00d) = 38;
+    *((char *) 0xdeadd00d) = 38;
     abort();
 
     /* notreached */

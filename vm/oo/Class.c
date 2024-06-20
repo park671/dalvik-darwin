@@ -283,7 +283,6 @@ static void linearAllocTests()
 bool dvmClassStartup(void)
 {
     ClassObject* unlinkedClass;
-
     /* make this a requirement -- don't currently support dirs in path */
     if (strcmp(gDvm.bootClassPathStr, ".") == 0) {
         LOGE("ERROR: must specify non-'.' bootclasspath\n");

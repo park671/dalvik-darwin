@@ -369,7 +369,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         androidRoot = getenv("ANDROID_ROOT");
         if (androidRoot == NULL) {
             LOGW("ANDROID_ROOT not set, defaulting to /system\n");
-            androidRoot = "/system";
+            androidRoot = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/system";
         }
         execFile = malloc(strlen(androidRoot) + strlen(kDexOptBin) + 1);
         strcpy(execFile, androidRoot);
