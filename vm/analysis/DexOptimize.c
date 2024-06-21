@@ -308,6 +308,7 @@ bool dvmUnlockCachedDexFile(int fd)
 bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
     const char* fileName, u4 modWhen, u4 crc, bool isBootstrap)
 {
+    LOGD("[+] dvmOptimizeDexFile(%d, %d, %ld, %s)\n", fd, dexOffset, dexLength, fileName);
     const char* lastPart = strrchr(fileName, '/');
     if (lastPart != NULL)
         lastPart++;
@@ -351,7 +352,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
     pid = fork();
     if (pid == 0) {
         static const int kUseValgrind = 0;
-        static const char* kDexOptBin = "/bin/dexopt";
+        static const char* kDexOptBin = "/dalvik_darwin_c99_dexopt";
         static const char* kValgrinder = "/usr/bin/valgrind";
         static const int kFixedArgCount = 10;
         static const int kValgrindArgCount = 5;
@@ -369,7 +370,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         androidRoot = getenv("ANDROID_ROOT");
         if (androidRoot == NULL) {
             LOGW("ANDROID_ROOT not set, defaulting to /system\n");
-            androidRoot = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/system";
+            androidRoot = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/cmake-build-debug";
         }
         execFile = malloc(strlen(androidRoot) + strlen(kDexOptBin) + 1);
         strcpy(execFile, androidRoot);
@@ -555,6 +556,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
          */
         bool success;
         void* mapAddr;
+        LOGD("[+] mmap fd=%d\n", fd);
         mapAddr = mmap(NULL, dexOffset + dexLength, PROT_READ|PROT_WRITE,
                     MAP_SHARED, fd, 0);
         if (mapAddr == MAP_FAILED) {
@@ -1144,8 +1146,10 @@ static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
     *pHeaderFlags = 0;
 
     LOGV("+++ swapping bytes\n");
-    if (dexFixByteOrdering(addr, len) != 0)
+    if (dexFixByteOrdering(addr, len) != 0) {
+        LOGE("[-] fix byte order fail.");
         goto bail;
+    }
 #if __BYTE_ORDER != __LITTLE_ENDIAN
     *pHeaderFlags |= DEX_OPT_FLAG_BIG;
 #endif

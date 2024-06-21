@@ -467,10 +467,23 @@ bail:
 /*
  * Main entry point.  Decide where to go.
  */
-int main(int argc, char *const argv[]) {
+int main(int argc, char const* argv[]) {
     LOGD("[+] dexopt (android 1.6)\n");
     LOGD("[+] rebuild on darwin by park.yu\n");
     set_process_name("dexopt");
+    // argc = 10;
+    // char *argv[] = {
+    //     "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/system/bin/dexopt",
+    //     "--dex",
+    //     "14",
+    //     "4",
+    //     "40",
+    //     "3583764",
+    //     "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin.jar",
+    //     "1490320610",
+    //     "1648105590",
+    //     "29"
+    // };
 
     setvbuf(stdout, NULL, _IONBF, 0);
 

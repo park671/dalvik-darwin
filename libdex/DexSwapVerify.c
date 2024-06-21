@@ -68,7 +68,7 @@ static u8 endianSwapU8(u8 value) {
  */
 typedef struct CheckState {
     const DexHeader*  pHeader;
-    const u1*         fileStart; 
+    const u1*         fileStart;
     const u1*         fileEnd;      // points to fileStart + fileLen
     u4                fileLen;
     DexDataMap*       pDataMap;     // set after map verification
@@ -104,6 +104,7 @@ static inline bool checkPtrRange(const CheckState* state,
     const void* fileEnd = state->fileEnd;
     if ((start < fileStart) || (start > fileEnd)
             || (end < start) || (end > fileEnd)) {
+        LOGE("[-] bad ptr:%p, %p, %p, %p\n", start, end, fileStart, fileEnd);
         LOGW("Bad offset range for %s: 0x%x..0x%x\n", label,
                 fileOffset(state, start), fileOffset(state, end));
         return false;
@@ -170,6 +171,10 @@ static inline bool checkPtrRange(const CheckState* state,
  */
 #define SWAP_OFFSET4(_field) {                                              \
         SWAP_FIELD4((_field));                                              \
+    }
+
+#define SWAP_OFFSET8(_field) {                                              \
+        SWAP_FIELD8((_field));                                              \
     }
 
 /*
@@ -239,7 +244,7 @@ static bool verifyMethodDefiner(const CheckState* state, u4 definingClass,
 static bool swapDexHeader(const CheckState* state, DexHeader* pHeader)
 {
     CHECK_PTR_RANGE(pHeader, pHeader + 1);
-    
+
     // magic is ok
     SWAP_FIELD4(pHeader->checksum);
     // signature is ok
@@ -350,7 +355,15 @@ static bool isDataSectionType(int mapType) {
             return false;
         }
     }
+    return true;
+}
 
+static bool check_list_size(uintptr_t _ptr, int _count, int _elemSize, const CheckState *state) {
+    const u1 *_start = (const u1 *) (_ptr);
+    const u1 *_end = _start + ((_count) * (_elemSize));
+    if (!checkPtrRange(state, _start, _end, "_label?")) {
+        return false;
+    }
     return true;
 }
 
@@ -360,6 +373,7 @@ static bool isDataSectionType(int mapType) {
  */
 static bool swapMap(CheckState* state, DexMapList* pMap)
 {
+    LOGD("[+] swapMap1\n");
     DexMapItem* item = pMap->list;
     u4 count = pMap->size;
     u4 dataItemCount = 0; // Total count of items in the data section.
@@ -367,15 +381,20 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
     u4 usedBits = 0;      // Bit set: one bit per section
     bool first = true;
     u4 lastOffset = 0;
-    
-    CHECK_LIST_SIZE(item, count, sizeof(DexMapItem));
-
+    LOGD("[+] swapMap2\n");
+    // CHECK_LIST_SIZE(item, count, sizeof(DexMapItem));
+    bool _check_result = check_list_size(item, count, sizeof(DexMapItem), state);
+    LOGD("[+] _check_result=%d\n", _check_result);
+    if(!_check_result) {
+        return 0;
+    }
+    LOGD("[+] swapMap3\n");
     while (count--) {
         SWAP_FIELD2(item->type);
         SWAP_FIELD2(item->unused);
         SWAP_FIELD4(item->size);
         SWAP_OFFSET4(item->offset);
-
+        LOGD("[+] swapMap4\n");
         if (first) {
             first = false;
         } else if (lastOffset >= item->offset) {
@@ -423,38 +442,38 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
         lastOffset = item->offset;
         item++;
     }
-
+    LOGD("[+] swapMap5\n");
     if ((usedBits & mapTypeToBitMask(kDexTypeHeaderItem)) == 0) {
         LOGE("Map is missing header entry\n");
         return false;
     }
-
+    LOGD("[+] swapMap6\n");
     if ((usedBits & mapTypeToBitMask(kDexTypeMapList)) == 0) {
         LOGE("Map is missing map_list entry\n");
         return false;
     }
-
+    LOGD("[+] swapMap7\n");
     if (((usedBits & mapTypeToBitMask(kDexTypeStringIdItem)) == 0)
             && ((state->pHeader->stringIdsOff != 0)
                     || (state->pHeader->stringIdsSize != 0))) {
         LOGE("Map is missing string_ids entry\n");
         return false;
     }
-
+    LOGD("[+] swapMap8\n");
     if (((usedBits & mapTypeToBitMask(kDexTypeTypeIdItem)) == 0)
             && ((state->pHeader->typeIdsOff != 0)
                     || (state->pHeader->typeIdsSize != 0))) {
         LOGE("Map is missing type_ids entry\n");
         return false;
     }
-
+    LOGD("[+] swapMap9\n");
     if (((usedBits & mapTypeToBitMask(kDexTypeProtoIdItem)) == 0)
             && ((state->pHeader->protoIdsOff != 0)
                     || (state->pHeader->protoIdsSize != 0))) {
         LOGE("Map is missing proto_ids entry\n");
         return false;
     }
-
+    LOGD("[+] swapMap10\n");
     if (((usedBits & mapTypeToBitMask(kDexTypeFieldIdItem)) == 0)
             && ((state->pHeader->fieldIdsOff != 0)
                     || (state->pHeader->fieldIdsSize != 0))) {
@@ -481,7 +500,7 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
         LOGE("Unable to allocate data map (size 0x%x)\n", dataItemCount);
         return false;
     }
-    
+    LOGD("[+] swapMap end\n");
     return true;
 }
 
@@ -640,7 +659,7 @@ static void* crossVerifyProtoIdItem(const CheckState* state, void* ptr) {
                     item->parametersOff, kDexTypeTypeList)) {
         return NULL;
     }
-    
+
     if (!shortyDescMatch(*shorty,
                     dexStringByTypeIdx(state->pDexFile, item->returnTypeIdx),
                     true)) {
@@ -677,7 +696,7 @@ static void* crossVerifyProtoIdItem(const CheckState* state, void* ptr) {
         LOGE("Shorty is too long\n");
         return NULL;
     }
-    
+
     const DexProtoId* item0 = state->previousItem;
     if (item0 != NULL) {
         // Check ordering. This relies on type_ids being in order.
@@ -695,7 +714,7 @@ static void* crossVerifyProtoIdItem(const CheckState* state, void* ptr) {
             for (;;) {
                 u4 idx0 = dexParameterIteratorNextIndex(&iterator0);
                 u4 idx1 = dexParameterIteratorNextIndex(&iterator);
-                
+
                 if (idx1 == kDexNoIndex) {
                     badOrder = true;
                     break;
@@ -739,7 +758,7 @@ static void* swapFieldIdItem(const CheckState* state, void* ptr) {
 static void* crossVerifyFieldIdItem(const CheckState* state, void* ptr) {
     const DexFieldId* item = ptr;
     const char* s;
-    
+
     s = dexStringByTypeIdx(state->pDexFile, item->classIdx);
     if (!dexIsClassDescriptor(s)) {
         LOGE("Invalid descriptor for class_idx: '%s'\n", s);
@@ -798,7 +817,7 @@ static void* crossVerifyFieldIdItem(const CheckState* state, void* ptr) {
 /* Perform byte-swapping and intra-item verification on method_id_item. */
 static void* swapMethodIdItem(const CheckState* state, void* ptr) {
     DexMethodId* item = ptr;
-    
+
     CHECK_PTR_RANGE(item, item + 1);
     SWAP_INDEX2(item->classIdx, state->pHeader->typeIdsSize);
     SWAP_INDEX2(item->protoIdx, state->pHeader->protoIdsSize);
@@ -906,7 +925,7 @@ static bool verifyClassDataIsForDef(const CheckState* state, u4 offset,
      */
     u4 dataDefiner = findFirstClassDataDefiner(state, classData);
     bool result = (dataDefiner == definerIdx) || (dataDefiner == kDexNoIndex);
-    
+
     free(classData);
     return result;
 }
@@ -1205,7 +1224,7 @@ static const u1* crossVerifyParameterAnnotations(const CheckState* state,
 static u4 findFirstAnnotationsDirectoryDefiner(const CheckState* state,
         const DexAnnotationsDirectoryItem* dir) {
     if (dir->fieldsSize != 0) {
-        const DexFieldAnnotationsItem* fields = 
+        const DexFieldAnnotationsItem* fields =
             dexGetFieldAnnotations(state->pDexFile, dir);
         const DexFieldId* field =
             dexGetFieldId(state->pDexFile, fields[0].fieldIdx);
@@ -1213,7 +1232,7 @@ static u4 findFirstAnnotationsDirectoryDefiner(const CheckState* state,
     }
 
     if (dir->methodsSize != 0) {
-        const DexMethodAnnotationsItem* methods = 
+        const DexMethodAnnotationsItem* methods =
             dexGetMethodAnnotations(state->pDexFile, dir);
         const DexMethodId* method =
             dexGetMethodId(state->pDexFile, methods[0].methodIdx);
@@ -1221,7 +1240,7 @@ static u4 findFirstAnnotationsDirectoryDefiner(const CheckState* state,
     }
 
     if (dir->parametersSize != 0) {
-        const DexParameterAnnotationsItem* parameters = 
+        const DexParameterAnnotationsItem* parameters =
             dexGetParameterAnnotations(state->pDexFile, dir);
         const DexMethodId* method =
             dexGetMethodId(state->pDexFile, parameters[0].methodIdx);
@@ -1337,14 +1356,18 @@ static void* swapAnnotationSetItem(const CheckState* state, void* ptr) {
     DexAnnotationSetItem* set = ptr;
     u4* item;
     u4 count;
-
+    LOGD("[+] swapAnnotationSetItem:1\n");
     CHECK_PTR_RANGE(set, set + 1);
+    LOGD("[+] swapAnnotationSetItem:2\n");
     SWAP_FIELD4(set->size);
+    LOGD("[+] swapAnnotationSetItem:3\n");
     count = set->size;
     item = set->entries;
+    LOGD("[+] swapAnnotationSetItem:4: %p,%d,%lu\n",item,count,sizeof(u4));
     CHECK_LIST_SIZE(item, count, sizeof(u4));
 
     while (count--) {
+        LOGD("[+] swapAnnotationSetItem:loop:1\n");
         SWAP_OFFSET4(*item);
         item++;
     }
@@ -1358,7 +1381,7 @@ static u4 annotationItemTypeIdx(const DexAnnotationItem* item) {
     const u1* data = item->annotation;
     return readUnsignedLeb128(&data);
 }
-  
+
 /* Perform cross-item verification of annotation_set_item. */
 static void* crossVerifyAnnotationSetItem(const CheckState* state, void* ptr) {
     const DexAnnotationSetItem* set = ptr;
@@ -1372,7 +1395,7 @@ static void* crossVerifyAnnotationSetItem(const CheckState* state, void* ptr) {
                         dexGetAnnotationOff(set, i), kDexTypeAnnotationItem)) {
             return NULL;
         }
-        
+
         const DexAnnotationItem* annotation =
             dexGetAnnotationItem(state->pDexFile, set, i);
         u4 idx = annotationItemTypeIdx(annotation);
@@ -1439,7 +1462,7 @@ static bool verifyMethods(const CheckState* state, u4 size,
             return false;
         }
 
-        if (((accessFlags & ~ACC_METHOD_MASK) != 0) 
+        if (((accessFlags & ~ACC_METHOD_MASK) != 0)
                 || (isSynchronized && !allowSynchronized)) {
             LOGE("Bogus method access flags %x @ %d\n", accessFlags, i);
             return false;
@@ -1465,7 +1488,7 @@ static bool verifyMethods(const CheckState* state, u4 size,
 static bool verifyClassDataItem0(const CheckState* state,
         DexClassData* classData) {
     bool okay;
-    
+
     okay = verifyFields(state, classData->header.staticFieldsSize,
             classData->staticFields, true);
 
@@ -1473,7 +1496,7 @@ static bool verifyClassDataItem0(const CheckState* state,
         LOGE("Trouble with static fields\n");
         return false;
     }
-    
+
     verifyFields(state, classData->header.instanceFieldsSize,
             classData->instanceFields, false);
 
@@ -1484,7 +1507,7 @@ static bool verifyClassDataItem0(const CheckState* state,
 
     okay = verifyMethods(state, classData->header.directMethodsSize,
             classData->directMethods, true);
-    
+
     if (!okay) {
         LOGE("Trouble with direct methods\n");
         return false;
@@ -1492,7 +1515,7 @@ static bool verifyClassDataItem0(const CheckState* state,
 
     okay = verifyMethods(state, classData->header.virtualMethodsSize,
             classData->virtualMethods, false);
-    
+
     if (!okay) {
         LOGE("Trouble with virtual methods\n");
         return false;
@@ -1518,7 +1541,7 @@ static void* intraVerifyClassDataItem(const CheckState* state, void* ptr) {
     if (!okay) {
         return NULL;
     }
-    
+
     return (void*) data;
 }
 
@@ -1553,7 +1576,7 @@ static u4 findFirstClassDataDefiner(const CheckState* state,
 
     return kDexNoIndex;
 }
-   
+
 /* Perform cross-item verification of class_data_item. */
 static void* crossVerifyClassDataItem(const CheckState* state, void* ptr) {
     const u1* data = ptr;
@@ -1589,13 +1612,13 @@ static void* crossVerifyClassDataItem(const CheckState* state, void* ptr) {
                 kDexTypeCodeItem)
             && verifyMethodDefiner(state, definingClass, meth->methodIdx);
     }
-    
+
     free(classData);
 
     if (!okay) {
         return NULL;
     }
-    
+
     return (void*) data;
 }
 
@@ -1631,7 +1654,7 @@ static u4 setHandlerOffsAndVerify(const CheckState* state,
         } else {
             catchAll = false;
         }
-        
+
         handlerOffs[i] = offset;
 
         while (size-- > 0) {
@@ -1696,9 +1719,9 @@ static void* swapTriesAndCatches(const CheckState* state, DexCode* code) {
         LOGE("Invalid handlers_size: %d\n", handlersSize);
         return NULL;
     }
-    
+
     u4 handlerOffs[handlersSize]; // list of valid handlerOff values
-    u4 endOffset = setHandlerOffsAndVerify(state, code, 
+    u4 endOffset = setHandlerOffsAndVerify(state, code,
             encodedPtr - encodedHandlers,
             handlersSize, handlerOffs);
 
@@ -1743,11 +1766,11 @@ static void* swapTriesAndCatches(const CheckState* state, DexCode* code) {
         lastEnd = tries->startAddr + tries->insnCount;
 
         if (lastEnd > code->insnsSize) {
-            LOGE("Invalid insn_count: 0x%x (end addr 0x%x)\n", 
+            LOGE("Invalid insn_count: 0x%x (end addr 0x%x)\n",
                     tries->insnCount, lastEnd);
             return NULL;
         }
-        
+
         tries++;
     }
 
@@ -1812,7 +1835,7 @@ static void* intraVerifyStringDataItem(const CheckState* state, void* ptr) {
             LOGE("String data would go beyond end-of-file\n");
             return NULL;
         }
-        
+
         u1 byte1 = *(data++);
 
         // Switch on the high four bits.
@@ -2033,7 +2056,7 @@ static void* intraVerifyDebugInfoItem(const CheckState* state, void* ptr) {
             return NULL;
         }
     }
-    
+
     return (void*) data;
 }
 
@@ -2052,13 +2075,13 @@ static u4 readUnsignedLittleEndian(const CheckState* state, const u1** pData,
     u4 i;
 
     CHECK_PTR_RANGE(data, data + size);
-    
+
     for (i = 0; i < size; i++) {
         result |= ((u4) *(data++)) << (i * 8);
     }
 
     *pData = data;
-    return result;        
+    return result;
 }
 
 /* Helper for *VerifyAnnotationItem() and *VerifyEncodedArrayItem(), which
@@ -2088,7 +2111,7 @@ static const u1* verifyEncodedArray(const CheckState* state,
 static const u1* verifyEncodedValue(const CheckState* state,
         const u1* data, bool crossVerify) {
     CHECK_PTR_RANGE(data, data + 1);
-    
+
     u1 headerByte = *(data++);
     u4 valueType = headerByte & kDexAnnotationValueTypeMask;
     u4 valueArg = headerByte >> kDexAnnotationValueArgShift;
@@ -2225,7 +2248,7 @@ static const u1* verifyEncodedAnnotation(const CheckState* state,
             return NULL;
         }
     }
-    
+
     u4 size = readAndVerifyUnsignedLeb128(&data, fileEnd, &okay);
     u4 lastIdx = 0;
     bool first = true;
@@ -2237,7 +2260,7 @@ static const u1* verifyEncodedAnnotation(const CheckState* state,
 
     while (size--) {
         idx = readAndVerifyUnsignedLeb128(&data, fileEnd, &okay);
-        
+
         if (!okay) {
             LOGE("Bogus encoded_annotation name_idx\n");
             return NULL;
@@ -2282,7 +2305,7 @@ static void* intraVerifyAnnotationItem(const CheckState* state, void* ptr) {
     const u1* data = ptr;
 
     CHECK_PTR_RANGE(data, data + 1);
-    
+
     switch (*(data++)) {
         case kDexVisibilityBuild:
         case kDexVisibilityRuntime:
@@ -2328,15 +2351,17 @@ static bool iterateSectionWithOptionalUpdate(CheckState* state,
     u4 i;
 
     state->previousItem = NULL;
-    
+    LOGD("[+] iterateSectionWithOptionalUpdate1\n");
     for (i = 0; i < count; i++) {
+        LOGD("[+] iterateSectionWithOptionalUpdate2\n");
         u4 newOffset = (offset + alignmentMask) & ~alignmentMask;
         u1* ptr = filePointer(state, newOffset);
-        
+        LOGD("[+] iterateSectionWithOptionalUpdate2:1, %p, %p\n",offset, newOffset);
         if (offset < newOffset) {
             ptr = filePointer(state, offset);
+            LOGD("[+] iterateSectionWithOptionalUpdate2:2\n");
             if (offset < newOffset) {
-                CHECK_OFFSET_RANGE(offset, newOffset);
+                // CHECK_OFFSET_RANGE(offset, newOffset);
                 while (offset < newOffset) {
                     if (*ptr != '\0') {
                         LOGE("Non-zero padding 0x%02x @ %x\n", *ptr, offset);
@@ -2347,9 +2372,11 @@ static bool iterateSectionWithOptionalUpdate(CheckState* state,
                 }
             }
         }
-
+        LOGD("[+] iterateSectionWithOptionalUpdate2:3\n");
         u1* newPtr = (u1*) func(state, ptr);
+        LOGD("[+] iterateSectionWithOptionalUpdate2:4\n");
         newOffset = fileOffset(state, newPtr);
+        LOGD("[+] iterateSectionWithOptionalUpdate2:5\n");
 
         if (newPtr == NULL) {
             LOGE("Trouble with item %d @ offset 0x%x\n", i, offset);
@@ -2362,13 +2389,14 @@ static bool iterateSectionWithOptionalUpdate(CheckState* state,
         }
 
         if (mapType >= 0) {
+            LOGD("[+] iterateSectionWithOptionalUpdate2:6\n");
             dexDataMapAdd(state->pDataMap, offset, mapType);
         }
-
+        LOGD("[+] iterateSectionWithOptionalUpdate2:7\n");
         state->previousItem = ptr;
         offset = newOffset;
     }
-
+    LOGD("[+] iterateSectionWithOptionalUpdate3\n");
     if (nextOffset != NULL) {
         *nextOffset = offset;
     }
@@ -2417,19 +2445,19 @@ static bool iterateDataSection(CheckState* state, u4 offset, u4 count,
         ItemVisitorFunction* func, u4 alignment, u4* nextOffset, int mapType) {
     u4 dataStart = state->pHeader->dataOff;
     u4 dataEnd = dataStart + state->pHeader->dataSize;
-
+    LOGD("[+] iterateDataSection: nextOffset==NULL?:%d\n", (nextOffset == NULL));
     assert(nextOffset != NULL);
 
     if ((offset < dataStart) || (offset >= dataEnd)) {
         LOGE("Bogus offset for data subsection: 0x%x\n", offset);
         return false;
     }
-
+    LOGD("[+] iterateDataSection: 1\n");
     if (!iterateSectionWithOptionalUpdate(state, offset, count, func,
                     alignment, nextOffset, mapType)) {
         return false;
     }
-
+    LOGD("[+] iterateDataSection: \n2");
     if (*nextOffset > dataEnd) {
         LOGE("Out-of-bounds end of data subsection: 0x%x\n", *nextOffset);
         return false;
@@ -2453,14 +2481,16 @@ static bool swapEverythingButHeaderAndMap(CheckState* state,
     u4 lastOffset = 0;
     u4 count = pMap->size;
     bool okay = true;
-
+    LOGD("[+] before loop swap:%d, %d\n", okay, count);
     while (okay && count--) {
         u4 sectionOffset = item->offset;
         u4 sectionCount = item->size;
         u2 type = item->type;
-
+        LOGD("[+] swap loop1\n");
         if (lastOffset < sectionOffset) {
+            LOGD("[+] before check offset.\n");
             CHECK_OFFSET_RANGE(lastOffset, sectionOffset);
+            LOGD("[+] after check offset.\n");
             const u1* ptr = filePointer(state, lastOffset);
             while (lastOffset < sectionOffset) {
                 if (*ptr != '\0') {
@@ -2477,11 +2507,11 @@ static bool swapEverythingButHeaderAndMap(CheckState* state,
                     lastOffset, sectionOffset);
             okay = false;
         }
-
+        LOGD("[+] swap loop2\n");
         if (!okay) {
             break;
         }
-
+        LOGD("[+] swap loop3: %d\n", type);
         switch (type) {
             case kDexTypeHeaderItem: {
                 /*
@@ -2535,7 +2565,7 @@ static bool swapEverythingButHeaderAndMap(CheckState* state,
                 break;
             }
             case kDexTypeMapList: {
-                /* 
+                /*
                  * The map section was swapped early on, but do some
                  * additional sanity checking here.
                  */
@@ -2612,7 +2642,7 @@ static bool swapEverythingButHeaderAndMap(CheckState* state,
 
         item++;
     }
-
+    LOGD("[+] after loop swap:%d\n", okay);
     return okay;
 }
 
@@ -2741,7 +2771,7 @@ int dexFixByteOrdering(u1* addr, int len)
              pHeader->magic[2], pHeader->magic[3]);
         okay = false;
     }
-
+    LOGD("[+] magic verify success\n");
     if (okay && memcmp(pHeader->magic+4, DEX_MAGIC_VERS, 4) != 0) {
         /* older or newer version we don't know how to read */
         LOGE("ERROR: Can't byte swap: bad dex version "
@@ -2750,7 +2780,7 @@ int dexFixByteOrdering(u1* addr, int len)
              pHeader->magic[6], pHeader->magic[7]);
         okay = false;
     }
-
+    LOGD("[+] magic version verify success\n");
     if (okay) {
         int expectedLen = (int) SWAP4(pHeader->fileSize);
         if (len < expectedLen) {
@@ -2762,6 +2792,8 @@ int dexFixByteOrdering(u1* addr, int len)
             // keep going
         }
     }
+
+    LOGD("[+] SWAP4 success\n");
 
     if (okay) {
         /*
@@ -2787,7 +2819,7 @@ int dexFixByteOrdering(u1* addr, int len)
             okay = false;
         }
     }
-
+    LOGD("[+] adler32 success\n");
     if (okay) {
         state.fileStart = addr;
         state.fileEnd = addr + len;
@@ -2801,7 +2833,7 @@ int dexFixByteOrdering(u1* addr, int len)
          */
         okay = swapDexHeader(&state, pHeader);
     }
-
+    LOGD("[+] swapDexHeader success\n");
     if (okay) {
         state.pHeader = pHeader;
 
@@ -2815,7 +2847,7 @@ int dexFixByteOrdering(u1* addr, int len)
             // keep going?
         }
     }
-
+    LOGD("[+] pHeader init success\n");
     if (okay) {
         /*
          * Look for the map. Swap it and then use it to find and swap
@@ -2824,20 +2856,21 @@ int dexFixByteOrdering(u1* addr, int len)
         if (pHeader->mapOff != 0) {
             DexFile dexFile;
             DexMapList* pDexMap = (DexMapList*) (addr + pHeader->mapOff);
-
+            LOGD("[+] before swapMap, addr=%p, mapOff=%p\n", addr, pHeader->mapOff);
             okay = okay && swapMap(&state, pDexMap);
+            LOGD("[+] before swapEverythingButHeaderAndMap\n");
             okay = okay && swapEverythingButHeaderAndMap(&state, pDexMap);
-
+            LOGD("[+] before dexFileSetupBasicPointers\n");
             dexFileSetupBasicPointers(&dexFile, addr);
             state.pDexFile = &dexFile;
-
+            LOGD("[+] before crossVerifyEverything\n");
             okay = okay && crossVerifyEverything(&state, pDexMap);
         } else {
-            LOGE("ERROR: No map found; impossible to byte-swap and verify");
+            LOGE("ERROR: No map found; impossible to byte-swap and verify\n");
             okay = false;
         }
     }
-
+    LOGD("[+] swapMap success\n");
     if (!okay) {
         LOGE("ERROR: Byte swap + verify failed\n");
     }
@@ -2845,6 +2878,6 @@ int dexFixByteOrdering(u1* addr, int len)
     if (state.pDataMap != NULL) {
         dexDataMapFree(state.pDataMap);
     }
-    
+    LOGD("[+] swap finish=%d\n", okay);
     return !okay;       // 0 == success
 }

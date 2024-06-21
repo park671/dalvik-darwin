@@ -16,6 +16,7 @@ pkg_check_modules(LIBFFI REQUIRED IMPORTED_TARGET libffi)
 # Include directories
 include_directories(
         ./
+        ./safe-iop
         ./fdlibm
         ./bionic
         ./ashmem
@@ -63,8 +64,10 @@ add_library(dalvik_darwin_ashmem STATIC
 )
 
 file(GLOB_RECURSE LIBCUTILS "libcutils/*.c" "libcutils/*.cpp")
+file(GLOB_RECURSE SAFE_IOP "safe-iop/*.c")
 add_library(dalvik_darwin_libcutils STATIC
         ${LIBCUTILS}
+        ${SAFE_IOP}
 )
 
 file(GLOB_RECURSE VM "vm/*.c")
@@ -93,3 +96,5 @@ add_executable(dalvik_darwin_c99_dexopt
         ${LIB_DEX}
 )
 target_link_libraries(dalvik_darwin_c99_dexopt dalvik_darwin_vm ZLIB::ZLIB)
+
+add_dependencies(dalvik_darwin_c99 dalvik_darwin_c99_dexopt)

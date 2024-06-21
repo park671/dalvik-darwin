@@ -1696,7 +1696,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
      * newClass->super is not traversed or freed by dvmFreeClassInnards, so
      * this is safe.
      */
-    assert(sizeof(u4) == sizeof(ClassObject*));
+    assert(sizeof(u8) == sizeof(ClassObject*));
     newClass->super = (ClassObject*) pClassDef->superclassIdx;
 
     /*

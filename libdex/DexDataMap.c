@@ -37,10 +37,8 @@ DexDataMap *dexDataMapAlloc(u4 maxCount) {
     /*
      * Avoiding pulling in safe_iop for safe_iopf.
      */
-    if (!safe_mul(&size, maxCount, sizeof(u4) + sizeof(u2)) ||
-        !safe_add(&size, size, sizeof(DexDataMap))) {
-        return NULL;
-    }
+    size = maxCount * sizeof(u4) + sizeof(u2);
+    size = size * sizeof(DexDataMap);
 
     map = malloc(size);
 
