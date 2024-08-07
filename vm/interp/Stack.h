@@ -119,36 +119,32 @@ typedef struct StackSaveArea StackSaveArea;
  * native code share the same stack, though this makes portability harder.
  */
 struct StackSaveArea {
-#ifdef PAD_SAVE_AREA
-    u4          pad0, pad1, pad2;
-#endif
+//    u4          pad0, pad1, pad2;
 
 #ifdef EASY_GDB
     /* make it easier to trek through stack frames in GDB */
-    StackSaveArea* prevSave;
+    StackSaveArea *prevSave;
 #endif
 
     /* saved frame pointer for previous frame, or NULL if this is at bottom */
-    void*       prevFrame;
+    void *prevFrame;
 
     /* saved program counter (from method in caller's frame) */
-    const u2*   savedPc;
+    const u2 *savedPc;
 
     /* pointer to method we're *currently* executing; handy for exceptions */
-    const Method* method;
+    const Method *method;
 
     union {
         /* for JNI native methods: top of local reference storage */
-        Object**    localRefTop;
+        Object **localRefTop;
 
         /* for interpreted methods: saved current PC, for exception stack
          * traces and debugger traces */
-        const u2*   currentPc;
+        const u2 *currentPc;
     } xtra;
 
-#ifdef PAD_SAVE_AREA
-    u4          pad3, pad4, pad5;
-#endif
+//    u4          pad3, pad4, pad5;
 };
 
 /* move between the stack save area and the frame pointer */
@@ -165,8 +161,7 @@ struct StackSaveArea {
 /*
  * Determine if the frame pointer points to a "break frame".
  */
-INLINE bool dvmIsBreakFrame(const u8* fp)
-{
+INLINE bool dvmIsBreakFrame(const u8 *fp) {
     return SAVEAREA_FROM_FP(fp)->method == NULL;
 }
 
@@ -174,31 +169,34 @@ INLINE bool dvmIsBreakFrame(const u8* fp)
  * Initialize the interp stack (call this after allocating storage and
  * setting thread->interpStackStart).
  */
-bool dvmInitInterpStack(Thread* thread, int stackSize);
+bool dvmInitInterpStack(Thread *thread, int stackSize);
 
 /*
  * Push a native method frame directly onto the stack.  Used to push the
  * "fake" native frames at the top of each thread stack.
  */
-bool dvmPushJNIFrame(Thread* thread, const Method* method);
+bool dvmPushJNIFrame(Thread *thread, const Method *method);
 
 /*
  * JNI local frame management.
  */
-bool dvmPushLocalFrame(Thread* thread, const Method* method);
-bool dvmPopLocalFrame(Thread* thread);
+bool dvmPushLocalFrame(Thread *thread, const Method *method);
+
+bool dvmPopLocalFrame(Thread *thread);
 
 /*
  * Call an interpreted method from native code.
  *
  * "obj" should be NULL for "direct" methods.
  */
-void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, va_list args);
-void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, const jvalue* args);
-void dvmCallMethod(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, ...);
+void dvmCallMethodV(Thread *self, const Method *method, Object *obj,
+                    JValue *pResult, va_list args);
+
+void dvmCallMethodA(Thread *self, const Method *method, Object *obj,
+                    JValue *pResult, const jvalue *args);
+
+void dvmCallMethod(Thread *self, const Method *method, Object *obj,
+                   JValue *pResult, ...);
 
 /*
  * Invoke a method, using the specified arguments and return type, through
@@ -212,34 +210,35 @@ void dvmCallMethod(Thread* self, const Method* method, Object* obj,
  * to re-generate them from the method signature.  "returnType" should be
  * NULL if we're invoking a constructor.
  */
-Object* dvmInvokeMethod(Object* invokeObj, const Method* meth,
-    ArrayObject* argList, ArrayObject* params, ClassObject* returnType,
-    bool noAccessCheck);
+Object *dvmInvokeMethod(Object *invokeObj, const Method *meth,
+                        ArrayObject *argList, ArrayObject *params, ClassObject *returnType,
+                        bool noAccessCheck);
 
 /*
  * Determine the source file line number, given the program counter offset
  * into the specified method.  Returns -2 for native methods, -1 if no
  * match was found.
  */
-int dvmLineNumFromPC(const Method* method, u4 relPc);
+int dvmLineNumFromPC(const Method *method, u4 relPc);
 
 /*
  * Given a frame pointer, compute the current call depth.  The value can be
  * "exact" (a count of non-break frames) or "vague" (just subtracting
  * pointers to give relative values).
  */
-int dvmComputeExactFrameDepth(const void* fp);
-int dvmComputeVagueFrameDepth(Thread* thread, const void* fp);
+int dvmComputeExactFrameDepth(const void *fp);
+
+int dvmComputeVagueFrameDepth(Thread *thread, const void *fp);
 
 /*
  * Get the frame pointer for the caller's stack frame.
  */
-void* dvmGetCallerFP(const void* curFrame);
+void *dvmGetCallerFP(const void *curFrame);
 
 /*
  * Get the class of the method that called us.
  */
-ClassObject* dvmGetCallerClass(const void* curFrame);
+ClassObject *dvmGetCallerClass(const void *curFrame);
 
 /*
  * Get the caller's caller's class.  Pass in the current fp.
@@ -247,7 +246,7 @@ ClassObject* dvmGetCallerClass(const void* curFrame);
  * This is used by e.g. java.lang.Class, which wants to know about the
  * class loader of the method that called it.
  */
-ClassObject* dvmGetCaller2Class(const void* curFrame);
+ClassObject *dvmGetCaller2Class(const void *curFrame);
 
 /*
  * Get the caller's caller's caller's class.  Pass in the current fp.
@@ -255,23 +254,25 @@ ClassObject* dvmGetCaller2Class(const void* curFrame);
  * This is used by e.g. java.lang.Class, which wants to know about the
  * class loader of the method that called it.
  */
-ClassObject* dvmGetCaller3Class(const void* curFrame);
+ClassObject *dvmGetCaller3Class(const void *curFrame);
 
 /*
  * Allocate and fill an array of method pointers representing the current
  * stack trace (element 0 is current frame).
  */
-bool dvmCreateStackTraceArray(const void* fp, const Method*** pArray,
-    int* pLength);
+bool dvmCreateStackTraceArray(const void *fp, const Method ***pArray,
+                              int *pLength);
 
 /*
  * Common handling for stack overflow.
  */
-void dvmHandleStackOverflow(Thread* self);
-void dvmCleanupStackOverflow(Thread* self);
+void dvmHandleStackOverflow(Thread *self);
+
+void dvmCleanupStackOverflow(Thread *self);
 
 /* debugging; dvmDumpThread() is probably a better starting point */
-void dvmDumpThreadStack(const DebugOutputTarget* target, Thread* thread);
-void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread);
+void dvmDumpThreadStack(const DebugOutputTarget *target, Thread *thread);
+
+void dvmDumpRunningThreadStack(const DebugOutputTarget *target, Thread *thread);
 
 #endif /*_DALVIK_INTERP_STACK*/
