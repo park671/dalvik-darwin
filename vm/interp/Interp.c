@@ -689,11 +689,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     }
 
     typedef bool (*Interpreter)(Thread*, InterpState*);
-    Interpreter stdInterp;
-    if (gDvm.executionMode == kExecutionModeInterpFast)
-        stdInterp = dvmMterpStd;
-    else
-        stdInterp = dvmInterpretStd;
+    Interpreter stdInterp = dvmInterpretStd;
 
     change = true;
     while (change) {
@@ -702,12 +698,6 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
             LOGVV("threadid=%d: interp STD\n", self->threadId);
             change = (*stdInterp)(self, &interpState);
             break;
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
-        case INTERP_DBG:
-            LOGVV("threadid=%d: interp DBG\n", self->threadId);
-            change = dvmInterpretDbg(self, &interpState);
-            break;
-#endif
         default:
             dvmAbort();
         }

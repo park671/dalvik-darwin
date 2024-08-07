@@ -93,7 +93,6 @@ typedef struct InterpState {
 /*
  * These are generated from InterpCore.h.
  */
-extern bool dvmInterpretDbg(Thread* self, InterpState* interpState);
 extern bool dvmInterpretStd(Thread* self, InterpState* interpState);
 #define INTERP_STD 0
 #define INTERP_DBG 1

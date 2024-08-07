@@ -908,7 +908,6 @@ int dvmStartup(int argc, const char *const argv[], bool ignoreUnrecognized,
 
     /* mterp setup */
     LOGV("Using executionMode %d\n", gDvm.executionMode);
-    dvmCheckAsmConstants();
 
     /*
      * Initialize components.

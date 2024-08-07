@@ -32,10 +32,10 @@
  * Must be exactly 16 bytes.
  */
 typedef struct AtomicCacheEntry {
-    u4          key1;
-    u4          key2;
-    u4          value;
-    volatile u4 version;    /* version and lock flag */
+    u8          key1;
+    u8          key2;
+    u8          value;
+    volatile u8 version;    /* version and lock flag */
 } AtomicCacheEntry;
 
 /*
@@ -160,12 +160,8 @@ void dvmFreeAtomicCache(AtomicCache* cache);
  * Making the last argument optional, instead of merely unused, saves us
  * a few percent in the ATOMIC_CACHE_LOOKUP time.
  */
-void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
-    u4 firstVersion
-#if CALC_CACHE_STATS > 0
-    , AtomicCache* pCache
-#endif
-    );
+void dvmUpdateAtomicCache(u8 key1, u8 key2, u8 value, AtomicCacheEntry* pEntry,
+                          u8 firstVersion);
 
 /*
  * Debugging.

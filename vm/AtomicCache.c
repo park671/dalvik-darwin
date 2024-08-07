@@ -28,26 +28,25 @@
 #define BOOL_TO_INT(x)  (x)
 //#define BOOL_TO_INT(x)  ((x) ? 1 : 0)
 
-#define CPU_CACHE_WIDTH         32
+#define CPU_CACHE_WIDTH         64
 #define CPU_CACHE_WIDTH_1       (CPU_CACHE_WIDTH-1)
 
-#define ATOMIC_LOCK_FLAG        (1 << 31)
+#define ATOMIC_LOCK_FLAG        (1LL << 63)
 
 /*
  * Allocate cache.
  */
-AtomicCache* dvmAllocAtomicCache(int numEntries)
-{
-    AtomicCache* newCache;
+AtomicCache *dvmAllocAtomicCache(int numEntries) {
+    AtomicCache *newCache;
 
-    newCache = (AtomicCache*) calloc(1, sizeof(AtomicCache));
+    newCache = (AtomicCache *) calloc(1, sizeof(AtomicCache));
     if (newCache == NULL)
         return NULL;
 
     newCache->numEntries = numEntries;
 
     newCache->entryAlloc = calloc(1,
-        sizeof(AtomicCacheEntry) * numEntries + CPU_CACHE_WIDTH);
+                                  sizeof(AtomicCacheEntry) * numEntries + CPU_CACHE_WIDTH);
     if (newCache->entryAlloc == NULL)
         return NULL;
 
@@ -56,9 +55,9 @@ AtomicCache* dvmAllocAtomicCache(int numEntries)
      * wide.  This ensures that each cache entry sits on a single CPU cache
      * line.
      */
-    assert(sizeof(AtomicCacheEntry) == 16);
-    newCache->entries = (AtomicCacheEntry*)
-        (((int) newCache->entryAlloc + CPU_CACHE_WIDTH_1) & ~CPU_CACHE_WIDTH_1);
+    assert(sizeof(AtomicCacheEntry) == 32);
+    newCache->entries = (AtomicCacheEntry *)
+            (((u8) newCache->entryAlloc + CPU_CACHE_WIDTH_1) & ~CPU_CACHE_WIDTH_1);
 
     return newCache;
 }
@@ -66,14 +65,12 @@ AtomicCache* dvmAllocAtomicCache(int numEntries)
 /*
  * Free cache.
  */
-void dvmFreeAtomicCache(AtomicCache* cache)
-{
+void dvmFreeAtomicCache(AtomicCache *cache) {
     if (cache != NULL) {
         free(cache->entryAlloc);
         free(cache);
     }
 }
-
 
 
 /*
@@ -83,13 +80,8 @@ void dvmFreeAtomicCache(AtomicCache* cache)
  *
  * We only need "pCache" for stats.
  */
-void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
-    u4 firstVersion
-#if CALC_CACHE_STATS > 0
-    , AtomicCache* pCache
-#endif
-    )
-{
+void dvmUpdateAtomicCache(u8 key1, u8 key2, u8 value, AtomicCacheEntry *pEntry,
+                          u8 firstVersion) {
     /*
      * The fields don't match, so we need to update them.  There is a
      * risk that another thread is also trying to update them, so we
@@ -105,15 +97,8 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
      * the version counter (at 2^31).  Probably not a real concern.
      */
     if ((firstVersion & ATOMIC_LOCK_FLAG) != 0 ||
-        !ATOMIC_CMP_SWAP((volatile s4*) &pEntry->version,
-            firstVersion, firstVersion | ATOMIC_LOCK_FLAG))
-    {
-        /*
-         * We couldn't get the write lock.  Return without updating the table.
-         */
-#if CALC_CACHE_STATS > 0
-        pCache->fail++;
-#endif
+        android_quasiatomic_cmpxchg_64((firstVersion), (firstVersion | (1LL << 63)),
+                                       ((volatile s8 *) &pEntry->version)) != 0) {
         return;
     }
 
@@ -145,9 +130,8 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
      * pEntry->version, so if this fails the world is broken.
      */
     firstVersion += 2;
-    if (!ATOMIC_CMP_SWAP((volatile s4*) &pEntry->version,
-            firstVersion | ATOMIC_LOCK_FLAG, firstVersion))
-    {
+    if (!ATOMIC_CMP_SWAP((volatile s4 *) &pEntry->version,
+                         firstVersion | ATOMIC_LOCK_FLAG, firstVersion)) {
         //LOGE("unable to reset the instanceof cache ownership\n");
         dvmAbort();
     }
@@ -157,17 +141,16 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
 /*
  * Dump the "instanceof" cache stats.
  */
-void dvmDumpAtomicCacheStats(const AtomicCache* pCache)
-{
+void dvmDumpAtomicCacheStats(const AtomicCache *pCache) {
     if (pCache == NULL)
         return;
     dvmFprintf(stdout,
-        "Cache stats: trv=%d fai=%d hit=%d mis=%d fil=%d %d%% (size=%d)\n",
-        pCache->trivial, pCache->fail, pCache->hits,
-        pCache->misses, pCache->fills,
-        (pCache->hits == 0) ? 0 :
-            pCache->hits * 100 /
-                (pCache->fail + pCache->hits + pCache->misses + pCache->fills),
-        pCache->numEntries);
+               "Cache stats: trv=%d fai=%d hit=%d mis=%d fil=%d %d%% (size=%d)\n",
+               pCache->trivial, pCache->fail, pCache->hits,
+               pCache->misses, pCache->fills,
+               (pCache->hits == 0) ? 0 :
+               pCache->hits * 100 /
+               (pCache->fail + pCache->hits + pCache->misses + pCache->fills),
+               pCache->numEntries);
 }
 

@@ -67,8 +67,6 @@ set(SOURCE_FILES
         jdwp/JdwpHandler.c
         jdwp/JdwpMain.c
         jdwp/JdwpSocket.c
-        mterp/Mterp.c
-        mterp/out/InterpC-portdbg.c
         native/InternalNative.c
         native/dalvik_system_DexFile.c
         native/dalvik_system_VMDebug.c
