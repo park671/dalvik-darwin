@@ -26,7 +26,7 @@ void dvmInlineNativeShutdown(void);
 /*
  * Basic 4-argument inline operation handler.
  */
-typedef bool (*InlineOp4Func)(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+typedef bool (*InlineOp4Func)(u8 arg0, u8 arg1, u8 arg2, u8 arg3,
     JValue* pResult);
 
 /*
@@ -70,7 +70,7 @@ extern const InlineOperation gDvmInlineOpsTable[];
  * Returns "true" if everything went normally, "false" if an exception
  * was thrown.
  */
-INLINE bool dvmPerformInlineOp4Std(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+INLINE bool dvmPerformInlineOp4Std(u8 arg0, u8 arg1, u8 arg2, u8 arg3,
     JValue* pResult, int opIndex)
 {
     return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3, pResult);
@@ -79,7 +79,7 @@ INLINE bool dvmPerformInlineOp4Std(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * Like the "std" version, but will emit profiling info.
  */
-bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool dvmPerformInlineOp4Dbg(u8 arg0, u8 arg1, u8 arg2, u8 arg3,
     JValue* pResult, int opIndex);
 
 #endif /*_DALVIK_INLINENATIVE*/

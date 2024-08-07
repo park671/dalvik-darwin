@@ -130,8 +130,8 @@ void dvmUpdateAtomicCache(u8 key1, u8 key2, u8 value, AtomicCacheEntry *pEntry,
      * pEntry->version, so if this fails the world is broken.
      */
     firstVersion += 2;
-    if (!ATOMIC_CMP_SWAP((volatile s4 *) &pEntry->version,
-                         firstVersion | ATOMIC_LOCK_FLAG, firstVersion)) {
+    if (android_quasiatomic_cmpxchg_64((firstVersion | (1LL << 63)), (s8) (firstVersion), ((volatile s8 *) &pEntry->version)) !=
+        0) {
         //LOGE("unable to reset the instanceof cache ownership\n");
         dvmAbort();
     }

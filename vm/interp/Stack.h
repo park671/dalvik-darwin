@@ -157,7 +157,7 @@ struct StackSaveArea {
 
 /* when calling a function, get a pointer to outs[0] */
 #define OUTS_FROM_FP(_fp, _argCount) \
-    ((u4*) ((u1*)SAVEAREA_FROM_FP(_fp) - sizeof(u4) * (_argCount)))
+    ((u8*) ((u1*)SAVEAREA_FROM_FP(_fp) - sizeof(u8) * (_argCount)))
 
 /* reserve this many bytes for handling StackOverflowError */
 #define STACK_OVERFLOW_RESERVE  512
@@ -165,7 +165,7 @@ struct StackSaveArea {
 /*
  * Determine if the frame pointer points to a "break frame".
  */
-INLINE bool dvmIsBreakFrame(const u4* fp)
+INLINE bool dvmIsBreakFrame(const u8* fp)
 {
     return SAVEAREA_FROM_FP(fp)->method == NULL;
 }

@@ -830,7 +830,7 @@ static Thread* allocThread(int interpStackSize)
     }
 #endif
 
-    assert(((u4)stackBottom & 0x03) == 0); // looks like our malloc ensures this
+    assert(((u8)stackBottom & 0x03) == 0); // looks like our malloc ensures this
     thread->interpStackSize = interpStackSize;
     thread->interpStackStart = stackBottom + interpStackSize;
     thread->interpStackEnd = stackBottom + STACK_OVERFLOW_RESERVE;

@@ -894,11 +894,11 @@ int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
 void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
 {
     ArrayObject* stackData = NULL;
-    int* simpleData = NULL;
+    u8* simpleData = NULL;
     void* fp;
     void* startFp;
     int stackDepth;
-    int* intPtr;
+    u8* intPtr;
 
     if (pCount != NULL)
         *pCount = 0;
@@ -950,20 +950,20 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
 
     /*
      * We need to store a pointer to the Method and the program counter.
-     * We have 4-byte pointers, so we use '[I'.
+     * We have 8-byte pointers, so we use '[J'.
      */
     if (wantObject) {
-        assert(sizeof(Method*) == 4);
-        stackData = dvmAllocPrimitiveArray('I', stackDepth*2, ALLOC_DEFAULT);
+        assert(sizeof(Method*) == 8);
+        stackData = dvmAllocPrimitiveArray('J', stackDepth*2, ALLOC_DEFAULT);
         if (stackData == NULL) {
             assert(dvmCheckException(dvmThreadSelf()));
             goto bail;
         }
-        intPtr = (int*) stackData->contents;
+        intPtr = (u8*) stackData->contents;
     } else {
         /* array of ints; first entry is stack depth */
-        assert(sizeof(Method*) == sizeof(int));
-        simpleData = (int*) malloc(sizeof(int) * stackDepth*2);
+        assert(sizeof(Method*) == sizeof(u8));
+        simpleData = (u8*) malloc(sizeof(u8) * stackDepth*2);
         if (simpleData == NULL)
             goto bail;
 
@@ -982,7 +982,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
             //LOGD("EXCEP keeping %s.%s\n", method->clazz->descriptor,
             //         method->name);
 
-            *intPtr++ = (int) method;
+            *intPtr++ = (u8) method;
             if (dvmIsNativeMethod(method)) {
                 *intPtr++ = 0;      /* no saved PC for native methods */
             } else {

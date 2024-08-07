@@ -44,7 +44,7 @@ typedef struct InterpState {
      * first and MUST appear in this order.
      */
     const u2*   pc;                     // program counter
-    u4*         fp;                     // frame pointer
+    u8*         fp;                     // frame pointer
 
     JValue      retval;                 // return value -- "out" only
     const Method* method;               // method being executed

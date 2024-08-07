@@ -1012,7 +1012,9 @@ ClassObject* dvmLookupClass(const char* descriptor, Object* loader,
 
     LOGVV("threadid=%d: dvmLookupClass searching for '%s' %p\n",
         dvmThreadSelf()->threadId, descriptor, loader);
-
+    if (strcmp("Ljava/nio/Buffer;", descriptor) == 0) {
+        LOGD("[-] nio buffer!\n");
+    }
     dvmHashTableLock(gDvm.loadedClasses);
     found = dvmHashTableLookup(gDvm.loadedClasses, hash, &crit,
                 hashcmpClassByCrit, false);
@@ -1127,7 +1129,7 @@ void dvmSetClassSerialNumber(ClassObject* clazz)
     do {
         oldValue = gDvm.classSerialNumber;
         newValue = oldValue + 1;
-    } while (!ATOMIC_CMP_SWAP(&gDvm.classSerialNumber, oldValue, newValue));
+    } while (android_atomic_cmpxchg((oldValue), (newValue), (&gDvm.classSerialNumber)) != 0);
 
     clazz->serialNumber = (u4) oldValue;
 }
@@ -2469,9 +2471,9 @@ bool dvmLinkClass(ClassObject* clazz, bool classesResolved)
          */
         dvmLinearReadWrite(clazz->classLoader, clazz->interfaces);
         for (i = 0; i < clazz->interfaceCount; i++) {
-            u4 interfaceIdx;
+            u8 interfaceIdx;
 
-            interfaceIdx = (u4) clazz->interfaces[i];   /* unpack temp store */
+            interfaceIdx = (u8) clazz->interfaces[i];   /* unpack temp store */
             assert(interfaceIdx != kDexNoIndex);
 
             clazz->interfaces[i] = dvmResolveClass(clazz, interfaceIdx, false);
@@ -3404,7 +3406,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
             break;
 
         pField->byteOffset = fieldOffset;
-        fieldOffset += sizeof(u4);
+        fieldOffset += sizeof(u8);
         LOGVV("  --- offset1 '%s'=%d\n", pField->field.name,pField->byteOffset);
     }
 
@@ -4432,7 +4434,8 @@ static int dumpClass(void* vclazz, void* varg)
     }
 
     /* clazz->super briefly holds the superclass index during class prep */
-    if ((u4)clazz->super > 0x10000 && (u4) clazz->super != (u4)-1)
+    //todo check this
+    if ((u8)clazz->super > 0x10000 && (u8) clazz->super != (u4)-1)
         super = clazz->super;
     else
         super = NULL;

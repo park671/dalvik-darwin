@@ -664,7 +664,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      * No need to initialize "retval".
      */
     interpState.method = method;
-    interpState.fp = (u4*) self->curFrame;
+    interpState.fp = (u8*) self->curFrame;
     interpState.pc = method->insns;
     interpState.entryPoint = kInterpEntryInstr;
 

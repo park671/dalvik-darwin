@@ -66,7 +66,7 @@ Method* dvmSlotToMethod(ClassObject* clazz, int slot);
  * Convert a primitive value, performing a widening conversion if necessary.
  */
 int dvmConvertPrimitiveValue(PrimitiveType srcType,
-    PrimitiveType dstType, const s4* srcPtr, s4* dstPtr);
+    PrimitiveType dstType, const u8* srcPtr, u8* dstPtr);
 
 /*
  * Convert the argument to the specified type.
@@ -74,7 +74,7 @@ int dvmConvertPrimitiveValue(PrimitiveType srcType,
  * Returns the width of the argument (1 for most types, 2 for J/D, -1 on
  * error).
  */
-int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* ins);
+int dvmConvertArgument(DataObject* arg, ClassObject* type, u8* ins);
 
 /*
  * Create a wrapper object for a primitive data type.  If "returnType" is

@@ -30,8 +30,7 @@
  * Currently this doesn't do much, since we don't need to zero out the
  * stack (and we really don't want to if it was created with mmap).
  */
-bool dvmInitInterpStack(Thread* thread, int stackSize)
-{
+bool dvmInitInterpStack(Thread *thread, int stackSize) {
     assert(thread->interpStackStart != NULL);
 
     assert(thread->curFrame == NULL);
@@ -55,30 +54,29 @@ bool dvmInitInterpStack(Thread* thread, int stackSize)
  * hands control back to us after the function we call returns or an
  * uncaught exception is thrown.
  */
-static bool dvmPushInterpFrame(Thread* self, const Method* method)
-{
-    StackSaveArea* saveBlock;
-    StackSaveArea* breakSaveBlock;
+static bool dvmPushInterpFrame(Thread *self, const Method *method) {
+    StackSaveArea *saveBlock;
+    StackSaveArea *breakSaveBlock;
     int stackReq;
-    u1* stackPtr;
+    u1 *stackPtr;
 
     assert(!dvmIsNativeMethod(method));
     assert(!dvmIsAbstractMethod(method));
 
     stackReq = method->registersSize * 4        // params + locals
-                + sizeof(StackSaveArea) * 2     // break frame + regular frame
-                + method->outsSize * 4;         // args to other methods
+               + sizeof(StackSaveArea) * 2     // break frame + regular frame
+               + method->outsSize * 4;         // args to other methods
 
     if (self->curFrame != NULL)
-        stackPtr = (u1*) SAVEAREA_FROM_FP(self->curFrame);
+        stackPtr = (u1 *) SAVEAREA_FROM_FP(self->curFrame);
     else
         stackPtr = self->interpStackStart;
 
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space */
         LOGW("Stack overflow on call to interp (top=%p cur=%p size=%d %s.%s)\n",
-            self->interpStackStart, self->curFrame, self->interpStackSize,
-            method->clazz->descriptor, method->name);
+             self->interpStackStart, self->curFrame, self->interpStackSize,
+             method->clazz->descriptor, method->name);
         dvmHandleStackOverflow(self);
         assert(dvmCheckException(self));
         return false;
@@ -89,13 +87,13 @@ static bool dvmPushInterpFrame(Thread* self, const Method* method)
      * args/registers and save area.
      */
     stackPtr -= sizeof(StackSaveArea);
-    breakSaveBlock = (StackSaveArea*)stackPtr;
+    breakSaveBlock = (StackSaveArea *) stackPtr;
     stackPtr -= method->registersSize * 4 + sizeof(StackSaveArea);
-    saveBlock = (StackSaveArea*) stackPtr;
+    saveBlock = (StackSaveArea *) stackPtr;
 
 #if !defined(NDEBUG) && !defined(PAD_SAVE_AREA)
     /* debug -- memset the new stack, unless we want valgrind's help */
-    memset(stackPtr - (method->outsSize*4), 0xaf, stackReq);
+    memset(stackPtr - (method->outsSize * 4), 0xaf, stackReq);
 #endif
 #ifdef EASY_GDB
     breakSaveBlock->prevSave = FP_FROM_SAVEAREA(self->curFrame);
@@ -111,9 +109,9 @@ static bool dvmPushInterpFrame(Thread* self, const Method* method)
     saveBlock->xtra.currentPc = NULL;           // not required?
     saveBlock->method = method;
 
-    LOGVV("PUSH frame: old=%p new=%p (size=%d)\n",
-        self->curFrame, FP_FROM_SAVEAREA(saveBlock),
-        (u1*)self->curFrame - (u1*)FP_FROM_SAVEAREA(saveBlock));
+            LOGVV("PUSH frame: old=%p new=%p (size=%ld)\n",
+                  self->curFrame, FP_FROM_SAVEAREA(saveBlock),
+                  (u1 *) self->curFrame - (u1 *) FP_FROM_SAVEAREA(saveBlock));
 
     self->curFrame = FP_FROM_SAVEAREA(saveBlock);
 
@@ -129,28 +127,27 @@ static bool dvmPushInterpFrame(Thread* self, const Method* method)
  *
  * The top frame has additional space for JNI local reference tracking.
  */
-bool dvmPushJNIFrame(Thread* self, const Method* method)
-{
-    StackSaveArea* saveBlock;
-    StackSaveArea* breakSaveBlock;
+bool dvmPushJNIFrame(Thread *self, const Method *method) {
+    StackSaveArea *saveBlock;
+    StackSaveArea *breakSaveBlock;
     int stackReq;
-    u1* stackPtr;
+    u1 *stackPtr;
 
     assert(dvmIsNativeMethod(method));
 
     stackReq = method->registersSize * 4        // params only
-                + sizeof(StackSaveArea) * 2;    // break frame + regular frame
+               + sizeof(StackSaveArea) * 2;    // break frame + regular frame
 
     if (self->curFrame != NULL)
-        stackPtr = (u1*) SAVEAREA_FROM_FP(self->curFrame);
+        stackPtr = (u1 *) SAVEAREA_FROM_FP(self->curFrame);
     else
         stackPtr = self->interpStackStart;
 
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space */
         LOGW("Stack overflow on call to native (top=%p cur=%p size=%d '%s')\n",
-            self->interpStackStart, self->curFrame, self->interpStackSize,
-            method->name);
+             self->interpStackStart, self->curFrame, self->interpStackSize,
+             method->name);
         dvmHandleStackOverflow(self);
         assert(dvmCheckException(self));
         return false;
@@ -162,9 +159,9 @@ bool dvmPushJNIFrame(Thread* self, const Method* method)
      * We leave space for the method args, which are copied in later.
      */
     stackPtr -= sizeof(StackSaveArea);
-    breakSaveBlock = (StackSaveArea*)stackPtr;
+    breakSaveBlock = (StackSaveArea *) stackPtr;
     stackPtr -= method->registersSize * 4 + sizeof(StackSaveArea);
-    saveBlock = (StackSaveArea*) stackPtr;
+    saveBlock = (StackSaveArea *) stackPtr;
 
 #if !defined(NDEBUG) && !defined(PAD_SAVE_AREA)
     /* debug -- memset the new stack */
@@ -187,9 +184,9 @@ bool dvmPushJNIFrame(Thread* self, const Method* method)
     saveBlock->xtra.localRefTop = self->jniLocalRefTable.nextEntry;
     saveBlock->method = method;
 
-    LOGVV("PUSH JNI frame: old=%p new=%p (size=%d)\n",
-        self->curFrame, FP_FROM_SAVEAREA(saveBlock),
-        (u1*)self->curFrame - (u1*)FP_FROM_SAVEAREA(saveBlock));
+            LOGVV("PUSH JNI frame: old=%p new=%p (size=%ld)\n",
+                  self->curFrame, FP_FROM_SAVEAREA(saveBlock),
+                  (u1 *) self->curFrame - (u1 *) FP_FROM_SAVEAREA(saveBlock));
 
     self->curFrame = FP_FROM_SAVEAREA(saveBlock);
 
@@ -202,24 +199,23 @@ bool dvmPushJNIFrame(Thread* self, const Method* method)
  * It's strictly used for tracking JNI local refs, and will be popped off
  * by dvmPopFrame if it's not removed explicitly.
  */
-bool dvmPushLocalFrame(Thread* self, const Method* method)
-{
-    StackSaveArea* saveBlock;
+bool dvmPushLocalFrame(Thread *self, const Method *method) {
+    StackSaveArea *saveBlock;
     int stackReq;
-    u1* stackPtr;
+    u1 *stackPtr;
 
     assert(dvmIsNativeMethod(method));
 
     stackReq = sizeof(StackSaveArea);       // regular frame
 
     assert(self->curFrame != NULL);
-    stackPtr = (u1*) SAVEAREA_FROM_FP(self->curFrame);
+    stackPtr = (u1 *) SAVEAREA_FROM_FP(self->curFrame);
 
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space; let JNI throw the exception */
         LOGW("Stack overflow on PushLocal (top=%p cur=%p size=%d '%s')\n",
-            self->interpStackStart, self->curFrame, self->interpStackSize,
-            method->name);
+             self->interpStackStart, self->curFrame, self->interpStackSize,
+             method->name);
         dvmHandleStackOverflow(self);
         assert(dvmCheckException(self));
         return false;
@@ -230,7 +226,7 @@ bool dvmPushLocalFrame(Thread* self, const Method* method)
      * area for the break frame, then shift down farther for the full frame.
      */
     stackPtr -= sizeof(StackSaveArea);
-    saveBlock = (StackSaveArea*) stackPtr;
+    saveBlock = (StackSaveArea *) stackPtr;
 
 #if !defined(NDEBUG) && !defined(PAD_SAVE_AREA)
     /* debug -- memset the new stack */
@@ -245,9 +241,9 @@ bool dvmPushLocalFrame(Thread* self, const Method* method)
     saveBlock->xtra.localRefTop = self->jniLocalRefTable.nextEntry;
     saveBlock->method = method;
 
-    LOGVV("PUSH JNI local frame: old=%p new=%p (size=%d)\n",
-        self->curFrame, FP_FROM_SAVEAREA(saveBlock),
-        (u1*)self->curFrame - (u1*)FP_FROM_SAVEAREA(saveBlock));
+            LOGVV("PUSH JNI local frame: old=%p new=%p (size=%d)\n",
+                  self->curFrame, FP_FROM_SAVEAREA(saveBlock),
+                  (u1 *) self->curFrame - (u1 *) FP_FROM_SAVEAREA(saveBlock));
 
     self->curFrame = FP_FROM_SAVEAREA(saveBlock);
 
@@ -260,9 +256,8 @@ bool dvmPushLocalFrame(Thread* self, const Method* method)
  * If we've gone too far, the previous frame is either a break frame or
  * an interpreted frame.  Either way, the method pointer won't match.
  */
-bool dvmPopLocalFrame(Thread* self)
-{
-    StackSaveArea* saveBlock = SAVEAREA_FROM_FP(self->curFrame);
+bool dvmPopLocalFrame(Thread *self) {
+    StackSaveArea *saveBlock = SAVEAREA_FROM_FP(self->curFrame);
 
     assert(!dvmIsBreakFrame(self->curFrame));
     if (saveBlock->method != SAVEAREA_FROM_FP(saveBlock->prevFrame)->method) {
@@ -276,9 +271,9 @@ bool dvmPopLocalFrame(Thread* self)
         return false;
     }
 
-    LOGVV("POP JNI local frame: removing %s, now %s\n",
-        saveBlock->method->name,
-        SAVEAREA_FROM_FP(saveBlock->prevFrame)->method->name);
+            LOGVV("POP JNI local frame: removing %s, now %s\n",
+                  saveBlock->method->name,
+                  SAVEAREA_FROM_FP(saveBlock->prevFrame)->method->name);
     dvmPopJniLocals(self, saveBlock);
     self->curFrame = saveBlock->prevFrame;
 
@@ -294,9 +289,8 @@ bool dvmPopLocalFrame(Thread* self)
  *
  * Returns "false" if there was no frame to pop.
  */
-static bool dvmPopFrame(Thread* self)
-{
-    StackSaveArea* saveBlock;
+static bool dvmPopFrame(Thread *self) {
+    StackSaveArea *saveBlock;
 
     if (self->curFrame == NULL)
         return false;
@@ -312,14 +306,14 @@ static bool dvmPopFrame(Thread* self)
         /* probably a native->native JNI call */
 
         if (dvmIsNativeMethod(saveBlock->method)) {
-            LOGVV("Popping JNI stack frame for %s.%s%s\n",
-                saveBlock->method->clazz->descriptor,
-                saveBlock->method->name,
-                (SAVEAREA_FROM_FP(saveBlock->prevFrame)->method == NULL) ?
-                "" : " (JNI local)");
+                    LOGVV("Popping JNI stack frame for %s.%s%s\n",
+                          saveBlock->method->clazz->descriptor,
+                          saveBlock->method->name,
+                          (SAVEAREA_FROM_FP(saveBlock->prevFrame)->method == NULL) ?
+                          "" : " (JNI local)");
             assert(saveBlock->xtra.localRefTop != NULL);
-            assert(saveBlock->xtra.localRefTop >=self->jniLocalRefTable.table &&
-                saveBlock->xtra.localRefTop <=self->jniLocalRefTable.nextEntry);
+            assert(saveBlock->xtra.localRefTop >= self->jniLocalRefTable.table &&
+                   saveBlock->xtra.localRefTop <= self->jniLocalRefTable.nextEntry);
 
             dvmPopJniLocals(self, saveBlock);
         }
@@ -332,8 +326,8 @@ static bool dvmPopFrame(Thread* self)
         dvmAbort();     // stack trashed -- nowhere to go in this thread
     }
 
-    LOGVV("POP frame: cur=%p new=%p\n",
-        self->curFrame, saveBlock->prevFrame);
+            LOGVV("POP frame: cur=%p new=%p\n",
+                  self->curFrame, saveBlock->prevFrame);
 
     self->curFrame = saveBlock->prevFrame;
     return true;
@@ -344,16 +338,15 @@ static bool dvmPopFrame(Thread* self)
  *
  * Pushes a call frame on, advancing self->curFrame.
  */
-static ClassObject* callPrep(Thread* self, const Method* method, Object* obj,
-    bool checkAccess)
-{
-    ClassObject* clazz;
+static ClassObject *callPrep(Thread *self, const Method *method, Object *obj,
+                             bool checkAccess) {
+    ClassObject *clazz;
 
 #ifndef NDEBUG
     if (self->status != THREAD_RUNNING) {
         LOGW("threadid=%d: status=%d on call to %s.%s -\n",
-            self->threadId, self->status,
-            method->clazz->descriptor, method->name);
+             self->threadId, self->status,
+             method->clazz->descriptor, method->name);
     }
 #endif
 
@@ -366,20 +359,19 @@ static ClassObject* callPrep(Thread* self, const Method* method, Object* obj,
         clazz = method->clazz;
 
     IF_LOGVV() {
-        char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGVV("thread=%d native code calling %s.%s %s\n", self->threadId,
-            clazz->descriptor, method->name, desc);
+        char *desc = dexProtoCopyMethodDescriptor(&method->prototype);
+                LOGVV("thread=%d native code calling %s.%s %s\n", self->threadId,
+                      clazz->descriptor, method->name, desc);
         free(desc);
     }
 
     if (checkAccess) {
         /* needed for java.lang.reflect.Method.invoke */
         if (!dvmCheckMethodAccess(dvmGetCaller2Class(self->curFrame),
-                method))
-        {
+                                  method)) {
             /* note this throws IAException, not IAError */
             dvmThrowException("Ljava/lang/IllegalAccessException;",
-                "access to method denied");
+                              "access to method denied");
             return NULL;
         }
     }
@@ -414,9 +406,8 @@ static ClassObject* callPrep(Thread* self, const Method* method, Object* obj,
  *
  * (Note this can't be inlined because it takes a variable number of args.)
  */
-void dvmCallMethod(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, ...)
-{
+void dvmCallMethod(Thread *self, const Method *method, Object *obj,
+                   JValue *pResult, ...) {
     JValue result;
 
     va_list args;
@@ -434,20 +425,19 @@ void dvmCallMethod(Thread* self, const Method* method, Object* obj,
  * We don't need to take the class as an argument because, in Dalvik,
  * we don't need to worry about static synchronized methods.
  */
-void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, va_list args)
-{
-    const char* desc = &(method->shorty[1]); // [0] is the return type.
+void dvmCallMethodV(Thread *self, const Method *method, Object *obj,
+                    JValue *pResult, va_list args) {
+    const char *desc = &(method->shorty[1]); // [0] is the return type.
     int verifyCount = 0;
-    ClassObject* clazz;
-    u4* ins;
+    ClassObject *clazz;
+    u8 *ins;
 
     clazz = callPrep(self, method, obj, false);
     if (clazz == NULL)
         return;
 
     /* "ins" for new frame start at frame pointer plus locals */
-    ins = ((u4*)self->curFrame) + (method->registersSize - method->insSize);
+    ins = ((u8 *) self->curFrame) + (method->registersSize - method->insSize);
 
     //LOGD("  FP is %p, INs live at >= %p\n", self->curFrame, ins);
 
@@ -456,13 +446,16 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
         assert(obj != NULL && dvmIsValidObject(obj));
 #endif
-        *ins++ = (u4) obj;
+        *ins++ = (u8) obj;
         verifyCount++;
+    } else {
+        LOGD("[-] %s.%s is static method, skip insert object into stack.\n", clazz->descriptor, method->name);
     }
 
     while (*desc != '\0') {
         switch (*(desc++)) {
-            case 'D': case 'J': {
+            case 'D':
+            case 'J': {
                 u8 val = va_arg(args, u8);
                 memcpy(ins, &val, 8);       // EABI prevents direct store
                 ins += 2;
@@ -478,9 +471,9 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
             }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
             case 'L': {     /* 'shorty' descr uses L for all refs, incl array */
-                Object* argObj = (Object*) va_arg(args, u4);
+                Object *argObj = (Object *) va_arg(args, u8);
                 assert(obj == NULL || dvmIsValidObject(obj));
-                *ins++ = (u4) argObj;
+                *ins++ = (u8) argObj;
                 verifyCount++;
                 break;
             }
@@ -496,13 +489,14 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
 #ifndef NDEBUG
     if (verifyCount != method->insSize) {
         LOGE("Got vfycount=%d insSize=%d for %s.%s\n", verifyCount,
-            method->insSize, clazz->descriptor, method->name);
+             method->insSize, clazz->descriptor, method->name);
         assert(false);
         goto bail;
     }
 #endif
 
     //dvmDumpThreadStack(dvmThreadSelf());
+    LOGE("[-] call method:%d, %s, %s\n", method->insSize, clazz->descriptor, method->name);
 
     if (dvmIsNativeMethod(method)) {
         /*
@@ -514,7 +508,7 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
         dvmInterpret(self, method, pResult);
     }
 
-bail:
+    bail:
     dvmPopFrame(self);
 }
 
@@ -531,38 +525,40 @@ bail:
  *
  * "args" may be NULL if the method has no arguments.
  */
-void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, const jvalue* args)
-{
-    const char* desc = &(method->shorty[1]); // [0] is the return type.
+void dvmCallMethodA(Thread *self, const Method *method, Object *obj,
+                    JValue *pResult, const jvalue *args) {
+    const char *desc = &(method->shorty[1]); // [0] is the return type.
     int verifyCount = 0;
-    ClassObject* clazz;
-    u4* ins;
+    ClassObject *clazz;
+    u8 *ins;
 
     clazz = callPrep(self, method, obj, false);
     if (clazz == NULL)
         return;
 
     /* "ins" for new frame start at frame pointer plus locals */
-    ins = ((u4*)self->curFrame) + (method->registersSize - method->insSize);
+    ins = ((u8 *) self->curFrame) + (method->registersSize - method->insSize);
 
     /* put "this" pointer into in0 if appropriate */
     if (!dvmIsStaticMethod(method)) {
         assert(obj != NULL);
-        *ins++ = (u4) obj;
+        *ins++ = (u8) obj;
         verifyCount++;
     }
 
     while (*desc != '\0') {
         switch (*(desc++)) {
-            case 'D': case 'J': {
+            case 'D':
+            case 'J': {
                 memcpy(ins, &args->j, 8);   /* EABI prevents direct store */
                 ins += 2;
                 verifyCount += 2;
                 args++;
                 break;
             }
-            case 'F': case 'I': case 'L': { /* (no '[' in short signatures) */
+            case 'F':
+            case 'I':
+            case 'L': { /* (no '[' in short signatures) */
                 *ins++ = args->i;           /* get all 32 bits */
                 verifyCount++;
                 args++;
@@ -594,7 +590,7 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
             }
             default: {
                 LOGE("Invalid char %c in short signature of %s.%s\n",
-                    *(desc-1), clazz->descriptor, method->name);
+                     *(desc - 1), clazz->descriptor, method->name);
                 assert(false);
                 goto bail;
             }
@@ -604,7 +600,7 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
 #ifndef NDEBUG
     if (verifyCount != method->insSize) {
         LOGE("Got vfycount=%d insSize=%d for %s.%s\n", verifyCount,
-            method->insSize, clazz->descriptor, method->name);
+             method->insSize, clazz->descriptor, method->name);
         assert(false);
         goto bail;
     }
@@ -620,7 +616,7 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
         dvmInterpret(self, method, pResult);
     }
 
-bail:
+    bail:
     dvmPopFrame(self);
 }
 
@@ -635,14 +631,13 @@ bail:
  *
  * If the invocation returns with an exception raised, we have to wrap it.
  */
-Object* dvmInvokeMethod(Object* obj, const Method* method,
-    ArrayObject* argList, ArrayObject* params, ClassObject* returnType,
-    bool noAccessCheck)
-{
-    ClassObject* clazz;
-    Object* retObj = NULL;
-    Thread* self = dvmThreadSelf();
-    s4* ins;
+Object *dvmInvokeMethod(Object *obj, const Method *method,
+                        ArrayObject *argList, ArrayObject *params, ClassObject *returnType,
+                        bool noAccessCheck) {
+    ClassObject *clazz;
+    Object *retObj = NULL;
+    Thread *self = dvmThreadSelf();
+    u8 *ins;
     int verifyCount, argListLength;
     JValue retval;
 
@@ -653,9 +648,9 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
         argListLength = 0;
     if (argListLength != (int) params->length) {
         LOGI("invoke: expected %d args, received %d args\n",
-            params->length, argListLength);
+             params->length, argListLength);
         dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "wrong number of arguments");
+                          "wrong number of arguments");
         return NULL;
     }
 
@@ -664,7 +659,7 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
         return NULL;
 
     /* "ins" for new frame start at frame pointer plus locals */
-    ins = ((s4*)self->curFrame) + (method->registersSize - method->insSize);
+    ins = ((u8 *) self->curFrame) + (method->registersSize - method->insSize);
     verifyCount = 0;
 
     //LOGD("  FP is %p, INs live at >= %p\n", self->curFrame, ins);
@@ -672,7 +667,7 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
     /* put "this" pointer into in0 if appropriate */
     if (!dvmIsStaticMethod(method)) {
         assert(obj != NULL);
-        *ins++ = (s4) obj;
+        *ins++ = (u8) obj;
         verifyCount++;
     }
 
@@ -680,25 +675,25 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
      * Copy the args onto the stack.  Primitive types are converted when
      * necessary, and object types are verified.
      */
-    DataObject** args;
-    ClassObject** types;
+    DataObject **args;
+    ClassObject **types;
     int i;
 
-    args = (DataObject**) argList->contents;
-    types = (ClassObject**) params->contents;
+    args = (DataObject **) argList->contents;
+    types = (ClassObject **) params->contents;
     for (i = 0; i < argListLength; i++) {
         int width;
 
         width = dvmConvertArgument(*args++, *types++, ins);
         if (width < 0) {
-            if (*(args-1) != NULL) {
+            if (*(args - 1) != NULL) {
                 LOGV("invoke: type mismatch on arg %d ('%s' '%s')\n",
-                    i, (*(args-1))->obj.clazz->descriptor,
-                    (*(types-1))->descriptor);
+                     i, (*(args - 1))->obj.clazz->descriptor,
+                     (*(types - 1))->descriptor);
             }
             dvmPopFrame(self);      // throw wants to pull PC out of stack
             dvmThrowException("Ljava/lang/IllegalArgumentException;",
-                "argument type mismatch");
+                              "argument type mismatch");
             goto bail_popped;
         }
 
@@ -708,7 +703,7 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
 
     if (verifyCount != method->insSize) {
         LOGE("Got vfycount=%d insSize=%d for %s.%s\n", verifyCount,
-            method->insSize, clazz->descriptor, method->name);
+             method->insSize, clazz->descriptor, method->name);
         assert(false);
         goto bail;
     }
@@ -743,14 +738,14 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
          * in "retval" is undefined.
          */
         if (returnType != NULL) {
-            retObj = (Object*)dvmWrapPrimitive(retval, returnType);
+            retObj = (Object *) dvmWrapPrimitive(retval, returnType);
             dvmReleaseTrackedAlloc(retObj, NULL);
         }
     }
 
-bail:
+    bail:
     dvmPopFrame(self);
-bail_popped:
+    bail_popped:
     return retObj;
 }
 
@@ -759,9 +754,8 @@ typedef struct LineNumFromPcContext {
     u4 lineNum;
 } LineNumFromPcContext;
 
-static int lineNumForPcCb(void *cnxt, u4 address, u4 lineNum)
-{
-    LineNumFromPcContext *pContext = (LineNumFromPcContext *)cnxt;
+static int lineNumForPcCb(void *cnxt, u4 address, u4 lineNum) {
+    LineNumFromPcContext *pContext = (LineNumFromPcContext *) cnxt;
 
     // We know that this callback will be called in 
     // ascending address order, so keep going until we find
@@ -786,9 +780,8 @@ static int lineNumForPcCb(void *cnxt, u4 address, u4 lineNum)
  * compiled without "-g", so no line number information is present).
  * Returns -2 for native methods (as expected in exception traces).
  */
-int dvmLineNumFromPC(const Method* method, u4 relPc)
-{
-    const DexCode* pDexCode = dvmGetMethodCode(method);
+int dvmLineNumFromPC(const Method *method, u4 relPc) {
+    const DexCode *pDexCode = dvmGetMethodCode(method);
 
     if (pDexCode == NULL) {
         if (dvmIsNativeMethod(method) && !dvmIsAbstractMethod(method))
@@ -803,11 +796,11 @@ int dvmLineNumFromPC(const Method* method, u4 relPc)
     context.lineNum = -1;
 
     dexDecodeDebugInfo(method->clazz->pDvmDex->pDexFile, pDexCode,
-            method->clazz->descriptor,
-            method->prototype.protoIdx,
-            method->accessFlags,
-            lineNumForPcCb, NULL, &context);
-    
+                       method->clazz->descriptor,
+                       method->prototype.protoIdx,
+                       method->accessFlags,
+                       lineNumForPcCb, NULL, &context);
+
     return context.lineNum;
 }
 
@@ -816,11 +809,10 @@ int dvmLineNumFromPC(const Method* method, u4 relPc)
  *
  * Excludes "break" frames.
  */
-int dvmComputeExactFrameDepth(const void* fp)
-{
+int dvmComputeExactFrameDepth(const void *fp) {
     int count = 0;
 
-    for ( ; fp != NULL; fp = SAVEAREA_FROM_FP(fp)->prevFrame) {
+    for (; fp != NULL; fp = SAVEAREA_FROM_FP(fp)->prevFrame) {
         if (!dvmIsBreakFrame(fp))
             count++;
     }
@@ -837,13 +829,12 @@ int dvmComputeExactFrameDepth(const void* fp)
  * Useful for implementing single-step debugger modes, which may need to
  * call this for every instruction.
  */
-int dvmComputeVagueFrameDepth(Thread* thread, const void* fp)
-{
-    const u1* interpStackStart = thread->interpStackStart;
-    const u1* interpStackBottom = interpStackStart - thread->interpStackSize;
+int dvmComputeVagueFrameDepth(Thread *thread, const void *fp) {
+    const u1 *interpStackStart = thread->interpStackStart;
+    const u1 *interpStackBottom = interpStackStart - thread->interpStackSize;
 
-    assert((u1*) fp >= interpStackBottom && (u1*) fp < interpStackStart);
-    return interpStackStart - (u1*) fp;
+    assert((u1 *) fp >= interpStackBottom && (u1 *) fp < interpStackStart);
+    return interpStackStart - (u1 *) fp;
 }
 
 /*
@@ -851,12 +842,11 @@ int dvmComputeVagueFrameDepth(Thread* thread, const void* fp)
  *
  * Skip "break" frames and reflection invoke frames.
  */
-void* dvmGetCallerFP(const void* curFrame)
-{
-    void* caller = SAVEAREA_FROM_FP(curFrame)->prevFrame;
-    StackSaveArea* saveArea;
+void *dvmGetCallerFP(const void *curFrame) {
+    void *caller = SAVEAREA_FROM_FP(curFrame)->prevFrame;
+    StackSaveArea *saveArea;
 
-retry:
+    retry:
     if (dvmIsBreakFrame(caller)) {
         /* pop up one more */
         caller = SAVEAREA_FROM_FP(caller)->prevFrame;
@@ -884,9 +874,8 @@ retry:
  *
  * This is used by e.g. java.lang.Class.
  */
-ClassObject* dvmGetCallerClass(const void* curFrame)
-{
-    void* caller;
+ClassObject *dvmGetCallerClass(const void *curFrame) {
+    void *caller;
 
     caller = dvmGetCallerFP(curFrame);
     if (caller == NULL)
@@ -901,10 +890,9 @@ ClassObject* dvmGetCallerClass(const void* curFrame)
  * This is used by e.g. java.lang.Class, which wants to know about the
  * class loader of the method that called it.
  */
-ClassObject* dvmGetCaller2Class(const void* curFrame)
-{
-    void* caller = SAVEAREA_FROM_FP(curFrame)->prevFrame;
-    void* callerCaller;
+ClassObject *dvmGetCaller2Class(const void *curFrame) {
+    void *caller = SAVEAREA_FROM_FP(curFrame)->prevFrame;
+    void *callerCaller;
 
     /* at the top? */
     if (dvmIsBreakFrame(caller) && SAVEAREA_FROM_FP(caller)->prevFrame == NULL)
@@ -924,9 +912,8 @@ ClassObject* dvmGetCaller2Class(const void* curFrame)
  * This is used by e.g. java.lang.Class, which wants to know about the
  * class loader of the method that called it.
  */
-ClassObject* dvmGetCaller3Class(const void* curFrame)
-{
-    void* caller = SAVEAREA_FROM_FP(curFrame)->prevFrame;
+ClassObject *dvmGetCaller3Class(const void *curFrame) {
+    void *caller = SAVEAREA_FROM_FP(curFrame)->prevFrame;
     int i;
 
     /* at the top? */
@@ -939,7 +926,7 @@ ClassObject* dvmGetCaller3Class(const void* curFrame)
         if (caller == NULL)
             return NULL;
     }
-    
+
     return SAVEAREA_FROM_FP(caller)->method->clazz;
 }
 
@@ -955,14 +942,13 @@ ClassObject* dvmGetCaller3Class(const void* curFrame)
  *
  * Returns "true" on success, "false" on failure (e.g. malloc failed).
  */
-bool dvmCreateStackTraceArray(const void* fp, const Method*** pArray,
-    int* pLength)
-{
-    const Method** array;
+bool dvmCreateStackTraceArray(const void *fp, const Method ***pArray,
+                              int *pLength) {
+    const Method **array;
     int idx, depth;
 
     depth = dvmComputeExactFrameDepth(fp);
-    array = (const Method**) malloc(depth * sizeof(Method*));
+    array = (const Method **) malloc(depth * sizeof(Method *));
     if (array == NULL)
         return false;
 
@@ -988,8 +974,7 @@ bool dvmCreateStackTraceArray(const void* fp, const Method*** pArray,
  * need to resolve classes, which requires calling into the class loader if
  * the classes aren't already in the "initiating loader" list.
  */
-void dvmHandleStackOverflow(Thread* self)
-{
+void dvmHandleStackOverflow(Thread *self) {
     /*
      * Can we make the reserved area available?
      */
@@ -998,14 +983,14 @@ void dvmHandleStackOverflow(Thread* self)
          * Already did, nothing to do but bail.
          */
         LOGE("DalvikVM: double-overflow of stack in threadid=%d; aborting\n",
-            self->threadId);
+             self->threadId);
         dvmDumpThread(self, false);
         dvmAbort();
     }
 
     /* open it up to the full range */
     LOGI("Stack overflow, expanding (%p to %p)\n", self->interpStackEnd,
-        self->interpStackStart - self->interpStackSize);
+         self->interpStackStart - self->interpStackSize);
     //dvmDumpThread(self, false);
     self->interpStackEnd = self->interpStackStart - self->interpStackSize;
     self->stackOverflowed = true;
@@ -1016,7 +1001,7 @@ void dvmHandleStackOverflow(Thread* self)
      * because of the pending exception.  So, we clear it and make it
      * the cause of the SOE.
      */
-    Object* excep = dvmGetException(self);
+    Object *excep = dvmGetException(self);
     if (excep != NULL) {
         LOGW("Stack overflow while throwing exception\n");
         dvmClearException(self);
@@ -1028,17 +1013,16 @@ void dvmHandleStackOverflow(Thread* self)
  * Reduce the available stack size.  By this point we should have finished
  * our overflow processing.
  */
-void dvmCleanupStackOverflow(Thread* self)
-{
-    const u1* newStackEnd;
+void dvmCleanupStackOverflow(Thread *self) {
+    const u1 *newStackEnd;
 
     assert(self->stackOverflowed);
 
     newStackEnd = (self->interpStackStart - self->interpStackSize)
-        + STACK_OVERFLOW_RESERVE;
-    if ((u1*)self->curFrame <= newStackEnd) {
+                  + STACK_OVERFLOW_RESERVE;
+    if ((u1 *) self->curFrame <= newStackEnd) {
         LOGE("Can't shrink stack: curFrame is in reserved area (%p %p)\n",
-            self->interpStackEnd, self->curFrame);
+             self->interpStackEnd, self->curFrame);
         dvmDumpThread(self, false);
         dvmAbort();
     }
@@ -1047,7 +1031,7 @@ void dvmCleanupStackOverflow(Thread* self)
     self->stackOverflowed = false;
 
     LOGI("Shrank stack (to %p, curFrame is %p)\n", self->interpStackEnd,
-        self->curFrame);
+         self->curFrame);
 }
 
 
@@ -1063,13 +1047,12 @@ void dvmCleanupStackOverflow(Thread* self)
  *
  * Note "framePtr" could be NULL in rare circumstances.
  */
-static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
-    Thread* thread)
-{
-    const StackSaveArea* saveArea;
-    const Method* method;
+static void dumpFrames(const DebugOutputTarget *target, void *framePtr,
+                       Thread *thread) {
+    const StackSaveArea *saveArea;
+    const Method *method;
     int checkCount = 0;
-    const u2* currentPc = NULL;
+    const u2 *currentPc = NULL;
     bool first = true;
 
     /*
@@ -1097,30 +1080,29 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
             else
                 relPc = -1;
 
-            char* className = dvmDescriptorToDot(method->clazz->descriptor);
+            char *className = dvmDescriptorToDot(method->clazz->descriptor);
             if (dvmIsNativeMethod(method))
                 dvmPrintDebugMessage(target,
-                    "  at %s.%s(Native Method)\n", className, method->name);
+                                     "  at %s.%s(Native Method)\n", className, method->name);
             else {
                 dvmPrintDebugMessage(target,
-                    "  at %s.%s(%s:%s%d)\n",
-                    className, method->name, dvmGetMethodSourceFile(method),
-                    (relPc >= 0 && first) ? "~" : "",
-                    relPc < 0 ? -1 : dvmLineNumFromPC(method, relPc));
+                                     "  at %s.%s(%s:%s%d)\n",
+                                     className, method->name, dvmGetMethodSourceFile(method),
+                                     (relPc >= 0 && first) ? "~" : "",
+                                     relPc < 0 ? -1 : dvmLineNumFromPC(method, relPc));
             }
             free(className);
 
             if (first &&
                 (thread->status == THREAD_WAIT ||
-                 thread->status == THREAD_TIMED_WAIT))
-            {
+                 thread->status == THREAD_TIMED_WAIT)) {
                 /* warning: wait status not stable, even in suspend */
-                Monitor* mon = thread->waitMonitor;
-                Object* obj = dvmGetMonitorObject(mon);
+                Monitor *mon = thread->waitMonitor;
+                Object *obj = dvmGetMonitorObject(mon);
                 if (obj != NULL) {
                     className = dvmDescriptorToDot(obj->clazz->descriptor);
                     dvmPrintDebugMessage(target,
-                        "  - waiting on <%p> (a %s)\n", mon, className);
+                                         "  - waiting on <%p> (a %s)\n", mon, className);
                     free(className);
                 }
             }
@@ -1143,8 +1125,8 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
         checkCount++;
         if (checkCount > 200) {
             dvmPrintDebugMessage(target,
-                "  ***** printed %d frames, not showing any more\n",
-                checkCount);
+                                 "  ***** printed %d frames, not showing any more\n",
+                                 checkCount);
             break;
         }
     }
@@ -1155,8 +1137,7 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
 /*
  * Dump the stack for the specified thread.
  */
-void dvmDumpThreadStack(const DebugOutputTarget* target, Thread* thread)
-{
+void dvmDumpThreadStack(const DebugOutputTarget *target, Thread *thread) {
     dumpFrames(target, thread->curFrame, thread);
 }
 
@@ -1171,19 +1152,18 @@ void dvmDumpThreadStack(const DebugOutputTarget* target, Thread* thread)
  *
  * There is a small chance that calling here will crash the VM.
  */
-void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread)
-{
-    StackSaveArea* saveArea;
-    const u1* origStack;
-    u1* stackCopy = NULL;
+void dvmDumpRunningThreadStack(const DebugOutputTarget *target, Thread *thread) {
+    StackSaveArea *saveArea;
+    const u1 *origStack;
+    u1 *stackCopy = NULL;
     int origSize, fpOffset;
-    void* fp;
+    void *fp;
     int depthLimit = 200;
 
     if (thread == NULL || thread->curFrame == NULL) {
         dvmPrintDebugMessage(target,
-            "DumpRunning: Thread at %p has no curFrame (threadid=%d)\n",
-            thread, (thread != NULL) ? thread->threadId : 0);
+                             "DumpRunning: Thread at %p has no curFrame (threadid=%d)\n",
+                             thread, (thread != NULL) ? thread->threadId : 0);
         return;
     }
 
@@ -1192,9 +1172,9 @@ void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread)
 
     /* copy the info we need, then the stack itself */
     origSize = thread->interpStackSize;
-    origStack = (const u1*) thread->interpStackStart - origSize;
-    stackCopy = (u1*) malloc(origSize);
-    fpOffset = (u1*) thread->curFrame - origStack;
+    origStack = (const u1 *) thread->interpStackStart - origSize;
+    stackCopy = (u1 *) malloc(origSize);
+    fpOffset = (u1 *) thread->curFrame - origStack;
     memcpy(stackCopy, origStack, origSize);
 
     /*
@@ -1214,11 +1194,11 @@ void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread)
         if (saveArea->prevFrame == NULL)
             break;
 
-        prevOffset = (u1*) saveArea->prevFrame - origStack;
+        prevOffset = (u1 *) saveArea->prevFrame - origStack;
         if (prevOffset < 0 || prevOffset > origSize) {
             dvmPrintDebugMessage(target,
-                "DumpRunning: bad offset found: %d (from %p %p)\n",
-                prevOffset, origStack, saveArea->prevFrame);
+                                 "DumpRunning: bad offset found: %d (from %p %p)\n",
+                                 prevOffset, origStack, saveArea->prevFrame);
             saveArea->prevFrame = NULL;
             break;
         }

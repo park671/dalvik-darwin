@@ -911,7 +911,7 @@ static PrimitiveType getBoxedType(DataObject* arg)
  * TODO? use JValue rather than u4 pointers
  */
 int dvmConvertPrimitiveValue(PrimitiveType srcType,
-    PrimitiveType dstType, const s4* srcPtr, s4* dstPtr)
+    PrimitiveType dstType, const u8* srcPtr, u8* dstPtr)
 {
     enum {
         OK4, OK8, ItoJ,
@@ -980,14 +980,14 @@ int dvmConvertPrimitiveValue(PrimitiveType srcType,
  *
  * Returns the width of the argument in 32-bit words (1 or 2), or -1 on error.
  */
-int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
+int dvmConvertArgument(DataObject* arg, ClassObject* type, u8* destPtr)
 {
     int retVal;
 
     if (dvmIsPrimitiveClass(type)) {
         /* e.g.: "arg" is java/lang/Float instance, "type" is VM float class */
         PrimitiveType srcType;
-        s4* valuePtr;
+        u8* valuePtr;
 
         srcType = getBoxedType(arg);
         if (srcType < 0) {     // didn't pass a boxed primitive in
@@ -997,14 +997,14 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
         }
 
         /* assumes value is stored in first instance field */
-        valuePtr = (s4*) arg->instanceData;
+        valuePtr = (u8*) arg->instanceData;
 
         retVal = dvmConvertPrimitiveValue(srcType, type->primitiveType,
                     valuePtr, destPtr);
     } else {
         /* verify object is compatible */
         if ((arg == NULL) || dvmInstanceof(arg->obj.clazz, type)) {
-            *destPtr = (s4) arg;
+            *destPtr = (u8) arg;
             retVal = 1;
         } else {
             LOGVV("Arg %p (%s) not compatible with %s\n",
@@ -1040,7 +1040,7 @@ DataObject* dvmWrapPrimitive(JValue value, ClassObject* returnType)
     };
     ClassObject* wrapperClass;
     DataObject* wrapperObj;
-    s4* dataPtr;
+    u8* dataPtr;
     PrimitiveType typeIndex = returnType->primitiveType;
     const char* classDescriptor;
 
@@ -1067,7 +1067,7 @@ DataObject* dvmWrapPrimitive(JValue value, ClassObject* returnType)
     wrapperObj = (DataObject*) dvmAllocObject(wrapperClass, ALLOC_DEFAULT);
     if (wrapperObj == NULL)
         return NULL;
-    dataPtr = (s4*) wrapperObj->instanceData;
+    dataPtr = (u8*) wrapperObj->instanceData;
 
     /* assumes value is stored in first instance field */
     /* (see dvmValidateBoxClasses) */
@@ -1096,7 +1096,6 @@ bool dvmUnwrapPrimitive(Object* value, ClassObject* returnType,
     JValue result;
     PrimitiveType typeIndex = returnType->primitiveType;
     PrimitiveType valueIndex;
-    //const u4* dataPtr;
 
     if (typeIndex == PRIM_NOT) {
         if (value != NULL && !dvmInstanceof(value->clazz, returnType)) {
@@ -1118,7 +1117,7 @@ bool dvmUnwrapPrimitive(Object* value, ClassObject* returnType,
     /* assumes value is stored in first instance field of "value" */
     /* (see dvmValidateBoxClasses) */
     if (dvmConvertPrimitiveValue(valueIndex, typeIndex,
-            (s4*) ((DataObject*)value)->instanceData, (s4*)pResult) < 0)
+            (u8*) ((DataObject*)value)->instanceData, (u8*)pResult) < 0)
     {
         LOGV("Prim conversion failed\n");
         return false;

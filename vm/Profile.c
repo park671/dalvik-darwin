@@ -226,7 +226,7 @@ static void updateActiveProfilers(int count)
             LOGE("Can't have %d active profilers\n", newValue);
             dvmAbort();
         }
-    } while (!ATOMIC_CMP_SWAP(&gDvm.activeProfilers, oldValue, newValue));
+    } while (android_atomic_cmpxchg((oldValue), (newValue), (&gDvm.activeProfilers)) != 0);
 
     LOGD("+++ active profiler count now %d\n", newValue);
 }
@@ -609,7 +609,7 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
             state->overflow = true;
             return;
         }
-    } while (!ATOMIC_CMP_SWAP(&state->curOffset, oldOffset, newOffset));
+    } while (android_atomic_cmpxchg((oldOffset), (newOffset), (&state->curOffset)) != 0);
 
     //assert(METHOD_ACTION((u4) method) == 0);
 

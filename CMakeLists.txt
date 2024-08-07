@@ -25,7 +25,7 @@ include_directories(
         ./include
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps -DWITH_PROFILER -DWITH_DEBUGGER -DDVM_RESOLVER_CACHE=0")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps -DDVM_RESOLVER_CACHE=0")
 
 # Enable deadlock prediction
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWITH_DEADLOCK_PREDICTION -DWITH_MONITOR_TRACKING")

@@ -6,19 +6,19 @@
 #include "mterp/Mterp.h"
 #include <math.h>                   // needed for fmod, fmodf
 
-static inline s8 getLongFromArray(const u_int32_t *ptr, int idx) {
+static inline s8 getLongFromArray(const u_int64_t *ptr, int idx) {
     return *((s8 *) &ptr[idx]);
 }
 
-static inline void putLongToArray(u_int32_t *ptr, int idx, s8 val) {
+static inline void putLongToArray(u_int64_t *ptr, int idx, s8 val) {
     *((s8 *) &ptr[idx]) = val;
 }
 
-static inline double getDoubleFromArray(const u_int32_t *ptr, int idx) {
+static inline double getDoubleFromArray(const u_int64_t *ptr, int idx) {
     return *((double *) &ptr[idx]);
 }
 
-static inline void putDoubleToArray(u_int32_t *ptr, int idx, double dval) {
+static inline void putDoubleToArray(u_int64_t *ptr, int idx, double dval) {
     *((double *) &ptr[idx]) = dval;
 }
 
@@ -51,20 +51,20 @@ static inline bool checkForNull(Object *obj) {
         dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
     }
-    if (obj->clazz == NULL || ((u_int32_t) obj->clazz) <= 65536) {
+    if (obj->clazz == NULL || ((u_int64_t) obj->clazz) <= 65536) {
         LOGE("Invalid object class %p (in %p)\n", obj->clazz, obj);
         dvmAbort();
     }
     return true;
 }
 
-static inline bool checkForNullExportPC(Object *obj, u_int32_t *fp, const u_int16_t *pc) {
+static inline bool checkForNullExportPC(Object *obj, u_int64_t *fp, const u_int16_t *pc) {
     if (obj == NULL) {
         (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc);
         dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
     }
-    if (obj->clazz == NULL || ((u_int32_t) obj->clazz) <= 65536) {
+    if (obj->clazz == NULL || ((u_int64_t) obj->clazz) <= 65536) {
         LOGE("Invalid object class %p (in %p)\n", obj->clazz, obj);
         dvmAbort();
     }
@@ -72,12 +72,11 @@ static inline bool checkForNullExportPC(Object *obj, u_int32_t *fp, const u_int1
 }
 
 bool dvmInterpretStd(Thread *self, InterpState *interpState) {
-    bool debugIsMethodEntry = interpState->debugIsMethodEntry;
     DvmDex *methodClassDex;
     JValue retval;
     const Method *curMethod;
     const u_int16_t *pc;
-    u_int32_t *fp;
+    u8 *fp;
     u_int16_t inst;
     u_int16_t ref;
     u_int16_t vsrc1, vsrc2, vdst;
@@ -88,15 +87,11 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
     fp = interpState->fp;
     retval = interpState->retval;
     methodClassDex = curMethod->clazz->pDvmDex;
-            LOGVV("threadid=%d: entry(%s) %s.%s pc=0x%x fp=%p ep=%d\n",
-                  self->threadId, (interpState->nextMode == INTERP_STD) ? "STD" : "DBG",
-                  curMethod->clazz->descriptor, curMethod->name, pc - curMethod->insns,
-                  fp, interpState->entryPoint);
+    LOGVV("dvmInterpretStd: threadid=%d: entry(%s) %s.%s pc=0x%lx fp=%p ep=%d\n",
+          self->threadId, (interpState->nextMode == INTERP_STD) ? "STD" : "DBG",
+          curMethod->clazz->descriptor, curMethod->name, pc - curMethod->insns,
+          fp, interpState->entryPoint);
     methodToCall = (const Method *) -1;
-    if (debugIsMethodEntry) {
-        ((void) 0);
-        ((void) 0);
-    }
     switch (interpState->entryPoint) {
         case kInterpEntryInstr:
             break;
@@ -200,7 +195,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
             case OP_MOVE_RESULT:
                 vdst = ((inst) >> 8);
                 ((void) 0);
-                (fp[(vdst)] = (retval.i));
+                (fp[(vdst)] = (retval.j));
                 {
                     (pc += 1);
                     break;
@@ -216,7 +211,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
             case OP_MOVE_RESULT_OBJECT:
                 vdst = ((inst) >> 8);
                 ((void) 0);
-                (fp[(vdst)] = (retval.i));
+                (fp[(vdst)] = (retval.j));
                 {
                     (pc += 1);
                     break;
@@ -225,7 +220,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                 vdst = ((inst) >> 8);
                 ((void) 0);
                 assert(self->exception != NULL);
-                (fp[(vdst)] = ((u_int32_t) self->exception));
+                (fp[(vdst)] = ((u8) self->exception));
                 dvmClearException(self);
                 {
                     (pc += 1);
@@ -238,7 +233,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
             case OP_RETURN:
                 vsrc1 = ((inst) >> 8);
                 ((void) 0);
-                retval.i = (fp[(vsrc1)]);
+                retval.j = (fp[(vsrc1)]);
                 goto returnFromMethod;;
             case OP_RETURN_WIDE:
                 vsrc1 = ((inst) >> 8);
@@ -248,7 +243,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
             case OP_RETURN_OBJECT:
                 vsrc1 = ((inst) >> 8);
                 ((void) 0);
-                retval.i = (fp[(vsrc1)]);
+                retval.j = (fp[(vsrc1)]);
                 goto returnFromMethod;;
             case OP_CONST_4: {
                 int32_t tmp;
@@ -347,7 +342,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     if (strObj == NULL)
                         goto exceptionThrown;;
                 }
-                (fp[(vdst)] = ((u_int32_t) strObj));
+                (fp[(vdst)] = ((u_int64_t) strObj));
             }
                 {
                     (pc += 2);
@@ -367,7 +362,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     if (strObj == NULL)
                         goto exceptionThrown;;
                 }
-                (fp[(vdst)] = ((u_int32_t) strObj));
+                (fp[(vdst)] = ((u_int64_t) strObj));
             }
                 {
                     (pc += 3);
@@ -385,7 +380,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     if (clazz == NULL)
                         goto exceptionThrown;;
                 }
-                (fp[(vdst)] = ((u_int32_t) clazz));
+                (fp[(vdst)] = ((u_int64_t) clazz));
             }
                 {
                     (pc += 2);
@@ -514,7 +509,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                 newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
                 if (newObj == NULL)
                     goto exceptionThrown;;
-                (fp[(vdst)] = ((u_int32_t) newObj));
+                (fp[(vdst)] = ((u8) newObj));
             }
                 {
                     (pc += 2);
@@ -545,7 +540,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                 newArray = dvmAllocArrayByClass(arrayClass, length, ALLOC_DONT_TRACK);
                 if (newArray == NULL)
                     goto exceptionThrown;;
-                (fp[(vdst)] = ((u_int32_t) newArray));
+                (fp[(vdst)] = ((u8) newArray));
             }
                 {
                     (pc += 2);
@@ -714,6 +709,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     goto exceptionThrown;;
                 }
                 testVal = (fp[(vsrc1)]);
+                //todo: check this
                 offset = dvmInterpHandleSparseSwitch(switchData, testVal);
                 ((void) 0);
                 if (offset <= 0) {
@@ -1211,7 +1207,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", NULL);
                     goto exceptionThrown;;
                 }
-                (fp[(vdst)] = (((u_int32_t *) arrayObj->contents)[(fp[(vsrc2)])]));
+                (fp[(vdst)] = (((u8 *) arrayObj->contents)[(fp[(vsrc2)])]));
                 ((void) 0);
             }
                 {
@@ -1257,7 +1253,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", NULL);
                     goto exceptionThrown;;
                 }
-                (fp[(vdst)] = (((u_int32_t *) arrayObj->contents)[(fp[(vsrc2)])]));
+                (fp[(vdst)] = (((u8 *) arrayObj->contents)[(fp[(vsrc2)])]));
                 ((void) 0);
             }
                 {
@@ -1372,7 +1368,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     goto exceptionThrown;;
                 }
                 ((void) 0);
-                ((u_int32_t *) arrayObj->contents)[(fp[(vsrc2)])] = (fp[(vdst)]);
+                ((u8 *) arrayObj->contents)[(fp[(vsrc2)])] = (fp[(vdst)]);
             }
                 {
                     (pc += 2);
@@ -1431,7 +1427,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     }
                 }
                 ((void) 0);
-                ((u_int32_t *) arrayObj->contents)[(fp[(vsrc2)])] =
+                ((u8 *) arrayObj->contents)[(fp[(vsrc2)])] =
                         (fp[(vdst)]);
             }
                 {
@@ -1587,7 +1583,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     ifield = dvmResolveInstField(curMethod->clazz, ref);
                     if (ifield == NULL) goto exceptionThrown;;
                 }
-                (fp[(vdst)] = (u_int32_t) (dvmGetFieldObject(obj, ifield->byteOffset)));
+                (fp[(vdst)] = (u8) (dvmGetFieldObject(obj, ifield->byteOffset)));
                 ((void) 0);
                 ((void) 0);
             }
@@ -1897,7 +1893,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     sfield = dvmResolveStaticField(curMethod->clazz, ref);
                     if (sfield == NULL) goto exceptionThrown;;
                 }
-                (fp[(vdst)] = (u_int32_t) (dvmGetStaticFieldObject(sfield)));
+                (fp[(vdst)] = (u8) (dvmGetStaticFieldObject(sfield)));
                 ((void) 0);
                 ((void) 0);
             }
@@ -4068,7 +4064,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
             case OP_UNUSED_EC:
             case OP_UNUSED_ED:
             case OP_EXECUTE_INLINE: {
-                u_int32_t arg0, arg1, arg2, arg3;
+                u8 arg0, arg1, arg2, arg3;
                 (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc);
                 vsrc1 = ((inst) >> 12);
                 ref = (pc[(1)]);
@@ -4087,7 +4083,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                         arg0 = (fp[(vdst & 0x0f)]);
                     default:;
                 }
-                if (!dvmPerformInlineOp4Dbg(arg0, arg1, arg2, arg3, &retval, ref))
+                if (!dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref))
                     goto exceptionThrown;;
             }
                 {
@@ -4146,7 +4142,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                 ((void) 0);
                 obj = (Object *) (fp[(vsrc1)]);
                 if (!checkForNullExportPC(obj, fp, pc)) goto exceptionThrown;;
-                (fp[(vdst)] = (u_int32_t) (dvmGetFieldObject(obj, ref)));
+                (fp[(vdst)] = (u8) (dvmGetFieldObject(obj, ref)));
                 ((void) 0);
             }
                 {
@@ -4232,7 +4228,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
             {
                 ClassObject *arrayClass;
                 ArrayObject *newArray;
-                u_int32_t *contents;
+                u8 *contents;
                 char typeCh;
                 int i;
                 u_int32_t arg5;
@@ -4271,7 +4267,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                 newArray = dvmAllocArrayByClass(arrayClass, vsrc1, ALLOC_DONT_TRACK);
                 if (newArray == NULL)
                     goto exceptionThrown;;
-                contents = (u_int32_t *) newArray->contents;
+                contents = (u8 *) newArray->contents;
                 if (methodCallRange) {
                     for (i = 0; i < vsrc1; i++)
                         contents[i] = (fp[(vdst + i)]);
@@ -4574,7 +4570,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
             }
             invokeMethod:
             { ;
-                u_int32_t *outs;
+                u8 *outs;
                 int i;
                 if (methodCallRange) {
                     assert(vsrc1 <= curMethod->outsSize);
@@ -4606,13 +4602,13 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
             }
                 {
                     StackSaveArea *newSaveArea;
-                    u_int32_t *newFp;
+                    u8 *newFp;
                     ((void) 0);
-                    newFp = (u_int32_t *) SAVEAREA_FROM_FP(fp) - methodToCall->registersSize;
+                    newFp = (u8 *) SAVEAREA_FROM_FP(fp) - methodToCall->registersSize;
                     newSaveArea = SAVEAREA_FROM_FP(newFp);
                     if (true) {
                         u_int8_t *bottom;
-                        bottom = (u_int8_t *) newSaveArea - methodToCall->outsSize * sizeof(u_int32_t);
+                        bottom = (u_int8_t *) newSaveArea - methodToCall->outsSize * sizeof(u8);
                         if (bottom < self->interpStackEnd) {
                             LOGV("Stack overflow on method call (start=%p end=%p newBot=%p size=%d '%s')\n",
                                  self->interpStackStart, self->interpStackEnd, bottom,
@@ -4630,7 +4626,6 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                         methodClassDex = curMethod->clazz->pDvmDex;
                         pc = methodToCall->insns;
                         fp = self->curFrame = newFp;
-                        debugIsMethodEntry = true;
                         ((void) 0);
                         ((void) 0);
                         {
@@ -4675,7 +4670,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
     interpState->retval = retval;
     interpState->nextMode =
             (INTERP_STD == INTERP_STD) ? INTERP_DBG : INTERP_STD;
-            LOGVV(" meth='%s.%s' pc=0x%x fp=%p\n",
+            LOGVV(" meth='%s.%s' pc=0x%lx fp=%p\n",
                   curMethod->clazz->descriptor, curMethod->name,
                   pc - curMethod->insns, fp);
     return true;

@@ -58,9 +58,9 @@ typedef struct RegisterMap RegisterMap;
  * arguments passed in, but some functions only care about the first two.
  * Passing extra arguments to a C function is (mostly) harmless.
  */
-typedef void (*DalvikBridgeFunc)(const u4* args, JValue* pResult,
+typedef void (*DalvikBridgeFunc)(const u8* args, JValue* pResult,
     const Method* method, struct Thread* self);
-typedef void (*DalvikNativeFunc)(const u4* args, JValue* pResult);
+typedef void (*DalvikNativeFunc)(const u8* args, JValue* pResult);
 
 
 /* vm-internal access flags and related definitions */
@@ -205,8 +205,8 @@ typedef struct Object {
 struct DataObject {
     Object          obj;                /* MUST be first item */
 
-    /* variable #of u4 slots; u8 uses 2 slots */
-    u4              instanceData[1];
+    /* only 1 slot for 64bit */
+    u8              instanceData[1];
 };
 
 /*
@@ -223,8 +223,8 @@ struct DataObject {
 struct StringObject {
     Object          obj;                /* MUST be first item */
 
-    /* variable #of u4 slots; u8 uses 2 slots */
-    u4              instanceData[1];
+    /* only 1 slot for 64bit */
+    u8              instanceData[1];
 };
 
 
@@ -280,7 +280,7 @@ struct ClassObject {
 
     /* leave space for instance data; we could access fields directly if we
        freeze the definition of java/lang/Class */
-    u4              instanceData[CLASS_FIELD_SLOTS];
+    u8              instanceData[CLASS_FIELD_SLOTS];//todo check this!
 
     /* UTF-8 descriptor for the class; from constant pool, or on heap
        if generated ("[C") */
@@ -673,7 +673,7 @@ INLINE void dvmSetFieldDouble(Object* obj, int offset, double val) {
     ((JValue*)BYTE_OFFSET(obj, offset))->d = val;
 }
 INLINE void dvmSetFieldObject(Object* obj, int offset, Object* val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->l = val;
+    ((JValue *) (((u1 *) (obj)) + (offset)))->l = val;
 }
 
 /*

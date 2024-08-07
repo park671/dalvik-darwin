@@ -100,7 +100,7 @@ extern u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
  * This exists only for benchmarks.
  */
 static bool org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod(
-    u4 arg0, u4 arg1, u4 arg2, u4 arg3, JValue* pResult)
+    u8 arg0, u8 arg1, u8 arg2, u8 arg3, JValue* pResult)
 {
     // do nothing
     return true;
@@ -116,7 +116,7 @@ static bool org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod(
 /*
  * public char charAt(int index)
  */
-static bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+static bool javaLangString_charAt(u8 arg0, u8 arg1, u8 arg2, u8 arg3,
     JValue* pResult)
 {
     int count, offset;
@@ -186,7 +186,7 @@ static void badMatch(StringObject* thisStrObj, StringObject* compStrObj,
 /*
  * public int compareTo(String s)
  */
-static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+static bool javaLangString_compareTo(u8 arg0, u8 arg1, u8 arg2, u8 arg3,
     JValue* pResult)
 {
     /*
@@ -280,7 +280,7 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public boolean equals(Object anObject)
  */
-static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+static bool javaLangString_equals(u8 arg0, u8 arg1, u8 arg2, u8 arg3,
     JValue* pResult)
 {
     /*
@@ -372,7 +372,7 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public int length()
  */
-static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+static bool javaLangString_length(u8 arg0, u8 arg1, u8 arg2, u8 arg3,
     JValue* pResult)
 {
     //LOGI("String.length this=0x%08x pResult=%p\n", arg0, pResult);
@@ -463,7 +463,7 @@ int dvmGetInlineOpsTableLength(void)
  * Make an inline call for the "debug" interpreter, used when the debugger
  * or profiler is active.
  */
-bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool dvmPerformInlineOp4Dbg(u8 arg0, u8 arg1, u8 arg2, u8 arg3,
     JValue* pResult, int opIndex)
 {
     Thread* self = dvmThreadSelf();

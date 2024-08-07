@@ -607,8 +607,7 @@ ClassObject* dvmFindPrimitiveClass(char type)
         ClassObject* primClass = createPrimitiveClass(idx);
         dvmReleaseTrackedAlloc((Object*) primClass, NULL);
 
-        if (!ATOMIC_CMP_SWAP((int*) &gDvm.primitiveClass[idx],
-            0, (int) primClass))
+        if (!(android_quasiatomic_cmpxchg_64((0), ((u8) primClass), ((u8 *) &gDvm. primitiveClass[idx])) == 0))
         {
             /*
              * Looks like somebody beat us to it.  Free up the one we
@@ -629,8 +628,7 @@ ClassObject* dvmFindPrimitiveClass(char type)
  *
  * Just creates the class and returns it (does not add it to the class list).
  */
-static ClassObject* createPrimitiveClass(int idx)
-{
+static ClassObject* createPrimitiveClass(int idx){
     ClassObject* newClass;
     static const char* kClassDescriptors[PRIM_MAX] = {
         "Z", "C", "F", "D", "B", "S", "I", "J", "V"
