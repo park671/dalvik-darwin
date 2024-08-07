@@ -285,6 +285,7 @@ tryArchive:
                     result = dexZipExtractEntryToFile(&archive, entry, fd);
                     extractWhen = dvmGetRelativeTimeUsec();
                 }
+                LOGD("[+] dexZipExtractEntryToFile() finish\n");
                 if (result) {
                     result = dvmOptimizeDexFile(fd, dexOffset,
                                 dexGetZipEntryUncompLen(&archive, entry),

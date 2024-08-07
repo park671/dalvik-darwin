@@ -771,7 +771,17 @@ static int dvmProcessOptions(int argc, const char *const argv[],
         dvmFprintf(stderr, "Heap start size must be <= heap max size\n");
         return -1;
     }
+    gDvm.classVerifyMode = VERIFY_MODE_NONE;
+    gDvm.dexOptMode = OPTIMIZE_MODE_NONE;
 
+    /*
+     * Default execution mode.
+     *
+     * This should probably interact with the mterp code somehow, e.g. if
+     * we know we're using the "desktop" build we should probably be
+     * using "portable" rather than "fast".
+     */
+    gDvm.executionMode = kExecutionModeInterpPortable;
     return 0;
 }
 
@@ -802,11 +812,11 @@ static void setCommandLineDefaults() {
     /* gDvm.jdwpSuspend = true; */
 
     /* allowed unless zygote config doesn't allow it */
-    gDvm.jdwpAllowed = true;
+    gDvm.jdwpAllowed = false;
 
     /* default verification and optimization modes */
-    gDvm.classVerifyMode = VERIFY_MODE_ALL;
-    gDvm.dexOptMode = OPTIMIZE_MODE_VERIFIED;
+    gDvm.classVerifyMode = VERIFY_MODE_NONE;
+    gDvm.dexOptMode = OPTIMIZE_MODE_NONE;
 
     /*
      * Default execution mode.
@@ -815,7 +825,7 @@ static void setCommandLineDefaults() {
      * we know we're using the "desktop" build we should probably be
      * using "portable" rather than "fast".
      */
-    gDvm.executionMode = kExecutionModeInterpFast;
+    gDvm.executionMode = kExecutionModeInterpPortable;
 }
 
 
@@ -914,37 +924,53 @@ int dvmStartup(int argc, const char *const argv[], bool ignoreUnrecognized,
      */
     if (!dvmAllocTrackerStartup())
         goto fail;
+    LOGD("[+] dvmAllocTrackerStartup startup success\n");
     if (!dvmGcStartup())
         goto fail;
+    LOGD("[+] dvmGcStartup startup success\n");
     if (!dvmThreadStartup())
         goto fail;
+    LOGD("[+] dvmThreadStartup startup success\n");
     if (!dvmInlineNativeStartup())
         goto fail;
+    LOGD("[+] dvmInlineNativeStartup startup success\n");
     if (!dvmVerificationStartup())
         goto fail;
+    LOGD("[+] dvmVerificationStartup startup success\n");
     if (!dvmInstanceofStartup())
         goto fail;
+    LOGD("[+] dvmInstanceofStartup startup success\n");
     if (!dvmClassStartup())
         goto fail;
+    LOGD("[+] dvmClassStartup startup success\n");
     if (!dvmThreadObjStartup())
         goto fail;
+    LOGD("[+] dvmThreadObjStartup startup success\n");
     if (!dvmExceptionStartup())
         goto fail;
+    LOGD("[+] dvmExceptionStartup startup success\n");
     if (!dvmStringInternStartup())
         goto fail;
+    LOGD("[+] dvmStringInternStartup startup success\n");
     if (!dvmNativeStartup())
         goto fail;
+    LOGD("[+] dvmNativeStartup startup success\n");
     if (!dvmInternalNativeStartup())
         goto fail;
+    LOGD("[+] dvmInternalNativeStartup startup success\n");
     if (!dvmJniStartup())
         goto fail;
+    LOGD("[+] dvmJniStartup startup success\n");
     if (!dvmReflectStartup())
         goto fail;
+    LOGD("[+] dvmReflectStartup startup success\n");
 #ifdef WITH_PROFILER
     if (!dvmProfilingStartup())
         goto fail;
+    LOGD("[+] dvmProfilingStartup startup success\n");
 #endif
 
+    LOGD("[+] --- almost make it! ---\n");
     /* make sure we got these [can this go away?] */
     assert(gDvm.classJavaLangClass != NULL);
     assert(gDvm.classJavaLangObject != NULL);

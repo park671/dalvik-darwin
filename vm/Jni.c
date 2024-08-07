@@ -3500,6 +3500,7 @@ jint JNI_GetCreatedJavaVMs(JavaVM** vmBuf, jsize bufLen, jsize* nVMs)
  */
 jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args)
 {
+    LOGD("[+] JNI_CreateJavaVM()\n");
     const JavaVMInitArgs* args = (JavaVMInitArgs*) vm_args;
     JNIEnvExt* pEnv = NULL;
     JavaVMExt* pVM = NULL;

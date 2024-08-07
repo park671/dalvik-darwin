@@ -373,7 +373,6 @@ static bool check_list_size(uintptr_t _ptr, int _count, int _elemSize, const Che
  */
 static bool swapMap(CheckState* state, DexMapList* pMap)
 {
-    LOGD("[+] swapMap1\n");
     DexMapItem* item = pMap->list;
     u4 count = pMap->size;
     u4 dataItemCount = 0; // Total count of items in the data section.
@@ -381,20 +380,17 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
     u4 usedBits = 0;      // Bit set: one bit per section
     bool first = true;
     u4 lastOffset = 0;
-    LOGD("[+] swapMap2\n");
     // CHECK_LIST_SIZE(item, count, sizeof(DexMapItem));
     bool _check_result = check_list_size(item, count, sizeof(DexMapItem), state);
     LOGD("[+] _check_result=%d\n", _check_result);
     if(!_check_result) {
         return 0;
     }
-    LOGD("[+] swapMap3\n");
     while (count--) {
         SWAP_FIELD2(item->type);
         SWAP_FIELD2(item->unused);
         SWAP_FIELD4(item->size);
         SWAP_OFFSET4(item->offset);
-        LOGD("[+] swapMap4\n");
         if (first) {
             first = false;
         } else if (lastOffset >= item->offset) {
@@ -442,38 +438,32 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
         lastOffset = item->offset;
         item++;
     }
-    LOGD("[+] swapMap5\n");
     if ((usedBits & mapTypeToBitMask(kDexTypeHeaderItem)) == 0) {
         LOGE("Map is missing header entry\n");
         return false;
     }
-    LOGD("[+] swapMap6\n");
     if ((usedBits & mapTypeToBitMask(kDexTypeMapList)) == 0) {
         LOGE("Map is missing map_list entry\n");
         return false;
     }
-    LOGD("[+] swapMap7\n");
     if (((usedBits & mapTypeToBitMask(kDexTypeStringIdItem)) == 0)
             && ((state->pHeader->stringIdsOff != 0)
                     || (state->pHeader->stringIdsSize != 0))) {
         LOGE("Map is missing string_ids entry\n");
         return false;
     }
-    LOGD("[+] swapMap8\n");
     if (((usedBits & mapTypeToBitMask(kDexTypeTypeIdItem)) == 0)
             && ((state->pHeader->typeIdsOff != 0)
                     || (state->pHeader->typeIdsSize != 0))) {
         LOGE("Map is missing type_ids entry\n");
         return false;
     }
-    LOGD("[+] swapMap9\n");
     if (((usedBits & mapTypeToBitMask(kDexTypeProtoIdItem)) == 0)
             && ((state->pHeader->protoIdsOff != 0)
                     || (state->pHeader->protoIdsSize != 0))) {
         LOGE("Map is missing proto_ids entry\n");
         return false;
     }
-    LOGD("[+] swapMap10\n");
     if (((usedBits & mapTypeToBitMask(kDexTypeFieldIdItem)) == 0)
             && ((state->pHeader->fieldIdsOff != 0)
                     || (state->pHeader->fieldIdsSize != 0))) {
@@ -500,7 +490,6 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
         LOGE("Unable to allocate data map (size 0x%x)\n", dataItemCount);
         return false;
     }
-    LOGD("[+] swapMap end\n");
     return true;
 }
 
@@ -1356,18 +1345,13 @@ static void* swapAnnotationSetItem(const CheckState* state, void* ptr) {
     DexAnnotationSetItem* set = ptr;
     u4* item;
     u4 count;
-    LOGD("[+] swapAnnotationSetItem:1\n");
     CHECK_PTR_RANGE(set, set + 1);
-    LOGD("[+] swapAnnotationSetItem:2\n");
     SWAP_FIELD4(set->size);
-    LOGD("[+] swapAnnotationSetItem:3\n");
     count = set->size;
     item = set->entries;
-    LOGD("[+] swapAnnotationSetItem:4: %p,%d,%lu\n",item,count,sizeof(u4));
     CHECK_LIST_SIZE(item, count, sizeof(u4));
 
     while (count--) {
-        LOGD("[+] swapAnnotationSetItem:loop:1\n");
         SWAP_OFFSET4(*item);
         item++;
     }
@@ -2351,20 +2335,15 @@ static bool iterateSectionWithOptionalUpdate(CheckState* state,
     u4 i;
 
     state->previousItem = NULL;
-    LOGD("[+] iterateSectionWithOptionalUpdate1\n");
     for (i = 0; i < count; i++) {
-        LOGD("[+] iterateSectionWithOptionalUpdate2\n");
         u4 newOffset = (offset + alignmentMask) & ~alignmentMask;
         u1* ptr = filePointer(state, newOffset);
-        LOGD("[+] iterateSectionWithOptionalUpdate2:1, %p, %p\n",offset, newOffset);
         if (offset < newOffset) {
             ptr = filePointer(state, offset);
-            LOGD("[+] iterateSectionWithOptionalUpdate2:2\n");
             if (offset < newOffset) {
                 // CHECK_OFFSET_RANGE(offset, newOffset);
                 while (offset < newOffset) {
                     if (*ptr != '\0') {
-                        LOGE("Non-zero padding 0x%02x @ %x\n", *ptr, offset);
                         return false;
                     }
                     ptr++;
@@ -2372,11 +2351,8 @@ static bool iterateSectionWithOptionalUpdate(CheckState* state,
                 }
             }
         }
-        LOGD("[+] iterateSectionWithOptionalUpdate2:3\n");
         u1* newPtr = (u1*) func(state, ptr);
-        LOGD("[+] iterateSectionWithOptionalUpdate2:4\n");
         newOffset = fileOffset(state, newPtr);
-        LOGD("[+] iterateSectionWithOptionalUpdate2:5\n");
 
         if (newPtr == NULL) {
             LOGE("Trouble with item %d @ offset 0x%x\n", i, offset);
@@ -2389,14 +2365,11 @@ static bool iterateSectionWithOptionalUpdate(CheckState* state,
         }
 
         if (mapType >= 0) {
-            LOGD("[+] iterateSectionWithOptionalUpdate2:6\n");
             dexDataMapAdd(state->pDataMap, offset, mapType);
         }
-        LOGD("[+] iterateSectionWithOptionalUpdate2:7\n");
         state->previousItem = ptr;
         offset = newOffset;
     }
-    LOGD("[+] iterateSectionWithOptionalUpdate3\n");
     if (nextOffset != NULL) {
         *nextOffset = offset;
     }
@@ -2445,19 +2418,16 @@ static bool iterateDataSection(CheckState* state, u4 offset, u4 count,
         ItemVisitorFunction* func, u4 alignment, u4* nextOffset, int mapType) {
     u4 dataStart = state->pHeader->dataOff;
     u4 dataEnd = dataStart + state->pHeader->dataSize;
-    LOGD("[+] iterateDataSection: nextOffset==NULL?:%d\n", (nextOffset == NULL));
     assert(nextOffset != NULL);
 
     if ((offset < dataStart) || (offset >= dataEnd)) {
         LOGE("Bogus offset for data subsection: 0x%x\n", offset);
         return false;
     }
-    LOGD("[+] iterateDataSection: 1\n");
     if (!iterateSectionWithOptionalUpdate(state, offset, count, func,
                     alignment, nextOffset, mapType)) {
         return false;
     }
-    LOGD("[+] iterateDataSection: \n2");
     if (*nextOffset > dataEnd) {
         LOGE("Out-of-bounds end of data subsection: 0x%x\n", *nextOffset);
         return false;
@@ -2481,12 +2451,10 @@ static bool swapEverythingButHeaderAndMap(CheckState* state,
     u4 lastOffset = 0;
     u4 count = pMap->size;
     bool okay = true;
-    LOGD("[+] before loop swap:%d, %d\n", okay, count);
     while (okay && count--) {
         u4 sectionOffset = item->offset;
         u4 sectionCount = item->size;
         u2 type = item->type;
-        LOGD("[+] swap loop1\n");
         if (lastOffset < sectionOffset) {
             LOGD("[+] before check offset.\n");
             CHECK_OFFSET_RANGE(lastOffset, sectionOffset);
@@ -2507,11 +2475,9 @@ static bool swapEverythingButHeaderAndMap(CheckState* state,
                     lastOffset, sectionOffset);
             okay = false;
         }
-        LOGD("[+] swap loop2\n");
         if (!okay) {
             break;
         }
-        LOGD("[+] swap loop3: %d\n", type);
         switch (type) {
             case kDexTypeHeaderItem: {
                 /*
@@ -2642,7 +2608,6 @@ static bool swapEverythingButHeaderAndMap(CheckState* state,
 
         item++;
     }
-    LOGD("[+] after loop swap:%d\n", okay);
     return okay;
 }
 

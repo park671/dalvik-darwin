@@ -470,6 +470,7 @@ static void freeCpeArray(ClassPathEntry* cpe)
  */
 static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
 {
+    LOGD("[+] prepareCpe\n");
     JarFile* pJarFile = NULL;
     RawDexFile* pRawDexFile = NULL;
     struct stat sb;
@@ -526,6 +527,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
  */
 static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
 {
+    LOGD("[+] processClassPath()\n");
     ClassPathEntry* cpe = NULL;
     char* mangle;
     char* cp;

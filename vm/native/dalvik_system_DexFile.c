@@ -383,6 +383,7 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
 static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
     JValue* pResult)
 {
+    LOGD("[+] Dalvik_dalvik_system_DexFile_isDexOptNeeded()\n");
     StringObject* nameObj = (StringObject*) args[0];
     char* name;
     DexCacheStatus status;
