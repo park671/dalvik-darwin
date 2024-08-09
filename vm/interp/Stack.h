@@ -109,6 +109,8 @@ possible to push additional call frames on without calling a method.
 struct StackSaveArea;
 typedef struct StackSaveArea StackSaveArea;
 
+#define REG_BYTE_SIZE 8
+
 //#define PAD_SAVE_AREA       /* help debug stack trampling */
 
 /*
@@ -119,13 +121,6 @@ typedef struct StackSaveArea StackSaveArea;
  * native code share the same stack, though this makes portability harder.
  */
 struct StackSaveArea {
-//    u4          pad0, pad1, pad2;
-
-#ifdef EASY_GDB
-    /* make it easier to trek through stack frames in GDB */
-    StackSaveArea *prevSave;
-#endif
-
     /* saved frame pointer for previous frame, or NULL if this is at bottom */
     void *prevFrame;
 
@@ -143,8 +138,6 @@ struct StackSaveArea {
          * traces and debugger traces */
         const u2 *currentPc;
     } xtra;
-
-//    u4          pad3, pad4, pad5;
 };
 
 /* move between the stack save area and the frame pointer */

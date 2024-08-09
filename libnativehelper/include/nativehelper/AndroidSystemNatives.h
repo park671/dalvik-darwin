@@ -60,6 +60,10 @@ int register_java_net_NetworkInterface(JNIEnv* env);
 int register_org_apache_harmony_luni_util_fltparse(JNIEnv *env);
 int register_org_apache_harmony_luni_util_NumberConvert(JNIEnv *env);
 
+int register_org_apache_harmony_luni_platform_OSFileSystem(JNIEnv* env);
+int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv* env);
+int register_org_apache_harmony_luni_platform_OSNetworkSystem(JNIEnv* env);
+
 int register_sun_misc_Unsafe(JNIEnv* env);
 
 #ifdef __cplusplus

@@ -27,7 +27,7 @@
  * (Not sure why the access flags weren't stored in the class along with
  * everything else.  Not sure why this isn't static.)
  */
-static void Dalvik_java_lang_reflect_Method_getMethodModifiers(const u4* args,
+static void Dalvik_java_lang_reflect_Method_getMethodModifiers(const u8* args,
     JValue* pResult)
 {
     // ignore thisPtr in args[0]
@@ -45,7 +45,7 @@ static void Dalvik_java_lang_reflect_Method_getMethodModifiers(const u4* args,
  *
  * Invoke a static or virtual method via reflection.
  */
-static void Dalvik_java_lang_reflect_Method_invokeNative(const u4* args,
+static void Dalvik_java_lang_reflect_Method_invokeNative(const u8* args,
     JValue* pResult)
 {
     // ignore thisPtr in args[0]
@@ -119,7 +119,7 @@ init_failed:
  * Return the annotations declared for this method.
  */
 static void Dalvik_java_lang_reflect_Method_getDeclaredAnnotations(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ClassObject* declaringClass = (ClassObject*) args[1];
@@ -140,7 +140,7 @@ static void Dalvik_java_lang_reflect_Method_getDeclaredAnnotations(
  * Return the annotations declared for this method's parameters.
  */
 static void Dalvik_java_lang_reflect_Method_getParameterAnnotations(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ClassObject* declaringClass = (ClassObject*) args[1];
@@ -161,7 +161,7 @@ static void Dalvik_java_lang_reflect_Method_getParameterAnnotations(
  * Return the default value for the annotation member represented by
  * this Method instance.  Returns NULL if none is defined.
  */
-static void Dalvik_java_lang_reflect_Method_getDefaultValue(const u4* args,
+static void Dalvik_java_lang_reflect_Method_getDefaultValue(const u8* args,
     JValue* pResult)
 {
     // ignore thisPtr in args[0]
@@ -187,7 +187,7 @@ static void Dalvik_java_lang_reflect_Method_getDefaultValue(const u4* args,
  * Returns the signature annotation.
  */
 static void Dalvik_java_lang_reflect_Method_getSignatureAnnotation(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ClassObject* declaringClass = (ClassObject*) args[1];

@@ -251,7 +251,7 @@ static void checkStackSum(Thread* self);
  * We don't call here explicitly.  This takes the same arguments as all
  * of the "internal native" methods.
  */
-void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method,
+void dvmCallJNIMethod(const u8* args, JValue* pResult, const Method* method,
     Thread* self)
 {
     int oldStatus;
@@ -282,7 +282,7 @@ void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method,
  *
  * Lock the object, then call through the usual function.
  */
-void dvmCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
+void dvmCallSynchronizedJNIMethod(const u8* args, JValue* pResult,
     const Method* method, Thread* self)
 {
     Object* lockObj;
@@ -420,7 +420,7 @@ bool dvmJniStartup(void)
 
     meth = dvmFindDirectMethodByDescriptor(platformAddressFactoryClass,
                 "on",
-                "(I)Lorg/apache/harmony/luni/platform/PlatformAddress;");
+                "(J)Lorg/apache/harmony/luni/platform/PlatformAddress;");
     if (meth == NULL) {
         LOGE("Unable to find PlatformAddressFactory.on\n");
         return false;
@@ -437,7 +437,7 @@ bool dvmJniStartup(void)
     gDvm.methJavaNioReadWriteDirectByteBuffer_init = meth;
 
     gDvm.offOrgApacheHarmonyLuniPlatformPlatformAddress_osaddr =
-        dvmFindFieldOffset(platformAddressClass, "osaddr", "I");
+        dvmFindFieldOffset(platformAddressClass, "osaddr", "J");
     if (gDvm.offOrgApacheHarmonyLuniPlatformPlatformAddress_osaddr < 0) {
         LOGE("Unable to find PlatformAddress.osaddr\n");
         return false;
@@ -451,7 +451,7 @@ bool dvmJniStartup(void)
     }
 
     gDvm.offJavaNioBuffer_effectiveDirectAddress =
-        dvmFindFieldOffset(bufferClass, "effectiveDirectAddress", "I");
+        dvmFindFieldOffset(bufferClass, "effectiveDirectAddress", "J");
     if (gDvm.offJavaNioBuffer_effectiveDirectAddress < 0) {
         LOGE("Unable to find Buffer.effectiveDirectAddress\n");
         return false;

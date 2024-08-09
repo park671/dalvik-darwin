@@ -28,7 +28,7 @@
  * called from <clinit> in javac-generated classes that use the Java
  * programming language "assert" keyword.
  */
-static void Dalvik_java_lang_Class_desiredAssertionStatus(const u4* args,
+static void Dalvik_java_lang_Class_desiredAssertionStatus(const u8* args,
     JValue* pResult)
 {
     ClassObject* thisPtr = (ClassObject*) args[0];
@@ -120,7 +120,7 @@ static void Dalvik_java_lang_Class_desiredAssertionStatus(const u4* args,
  *
  * "name" is in "binary name" format, e.g. "dalvik.system.Debug$1".
  */
-static void Dalvik_java_lang_Class_classForName(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_Class_classForName(const u8* args, JValue* pResult)
 {
     StringObject* nameObj = (StringObject*) args[0];
     bool initialize = (args[1] != 0);
@@ -134,7 +134,7 @@ static void Dalvik_java_lang_Class_classForName(const u4* args, JValue* pResult)
  *
  * Return the class' defining class loader.
  */
-static void Dalvik_java_lang_Class_getClassLoader(const u4* args,
+static void Dalvik_java_lang_Class_getClassLoader(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -148,7 +148,7 @@ static void Dalvik_java_lang_Class_getClassLoader(const u4* args,
  * If this is an array type, return the class of the elements; otherwise
  * return NULL.
  */
-static void Dalvik_java_lang_Class_getComponentType(const u4* args,
+static void Dalvik_java_lang_Class_getComponentType(const u8* args,
     JValue* pResult)
 {
     ClassObject* thisPtr = (ClassObject*) args[0];
@@ -176,7 +176,7 @@ static void Dalvik_java_lang_Class_getComponentType(const u4* args,
  * If "publicOnly" is set, we strip out any classes that don't have "public"
  * access.
  */
-static void Dalvik_java_lang_Class_getDeclaredClasses(const u4* args,
+static void Dalvik_java_lang_Class_getDeclaredClasses(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -225,7 +225,7 @@ static void Dalvik_java_lang_Class_getDeclaredClasses(const u4* args,
  * static Constructor[] getDeclaredConstructors(Class clazz, boolean publicOnly)
  *     throws SecurityException
  */
-static void Dalvik_java_lang_Class_getDeclaredConstructors(const u4* args,
+static void Dalvik_java_lang_Class_getDeclaredConstructors(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -242,7 +242,7 @@ static void Dalvik_java_lang_Class_getDeclaredConstructors(const u4* args,
  * static Field[] getDeclaredFields(Class klass, boolean publicOnly)
  *     throws SecurityException
  */
-static void Dalvik_java_lang_Class_getDeclaredFields(const u4* args,
+static void Dalvik_java_lang_Class_getDeclaredFields(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -259,13 +259,13 @@ static void Dalvik_java_lang_Class_getDeclaredFields(const u4* args,
  * static Method[] getDeclaredMethods(Class clazz, boolean publicOnly)
  *     throws SecurityException
  */
-static void Dalvik_java_lang_Class_getDeclaredMethods(const u4* args,
+static void Dalvik_java_lang_Class_getDeclaredMethods(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
     bool publicOnly = (args[1] != 0);
     ArrayObject* methods;
-
+    LOGD("[-] java_lang_Class_getDeclaredMethods\n");
     methods = dvmGetDeclaredMethods(clazz, publicOnly);
     dvmReleaseTrackedAlloc((Object*) methods, NULL);
 
@@ -275,7 +275,7 @@ static void Dalvik_java_lang_Class_getDeclaredMethods(const u4* args,
 /*
  * Class[] getInterfaces()
  */
-static void Dalvik_java_lang_Class_getInterfaces(const u4* args,
+static void Dalvik_java_lang_Class_getInterfaces(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -295,7 +295,7 @@ static void Dalvik_java_lang_Class_getInterfaces(const u4* args,
  * and this is an inner class, we return the access flags from the inner class
  * attribute.
  */
-static void Dalvik_java_lang_Class_getModifiers(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_Class_getModifiers(const u8* args, JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
     bool ignoreInner = args[1];
@@ -322,7 +322,7 @@ static void Dalvik_java_lang_Class_getModifiers(const u4* args, JValue* pResult)
  *
  * Return the class' name.
  */
-static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_Class_getName(const u8* args, JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
     const char* descriptor = clazz->descriptor;
@@ -410,7 +410,7 @@ static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
  *
  * For an array, return the java/lang/Object ClassObject.
  */
-static void Dalvik_java_lang_Class_getSuperclass(const u4* args,
+static void Dalvik_java_lang_Class_getSuperclass(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -427,7 +427,7 @@ static void Dalvik_java_lang_Class_getSuperclass(const u4* args,
  * Determine if this class is either the same as, or is a superclass or
  * superinterface of, the class specified in the "cls" parameter.
  */
-static void Dalvik_java_lang_Class_isAssignableFrom(const u4* args,
+static void Dalvik_java_lang_Class_isAssignableFrom(const u8* args,
     JValue* pResult)
 {
     ClassObject* thisPtr = (ClassObject*) args[0];
@@ -445,7 +445,7 @@ static void Dalvik_java_lang_Class_isAssignableFrom(const u4* args,
  *
  * Dynamic equivalent of Java programming language "instanceof".
  */
-static void Dalvik_java_lang_Class_isInstance(const u4* args,
+static void Dalvik_java_lang_Class_isInstance(const u8* args,
     JValue* pResult)
 {
     ClassObject* thisPtr = (ClassObject*) args[0];
@@ -459,7 +459,7 @@ static void Dalvik_java_lang_Class_isInstance(const u4* args,
 /*
  * public boolean isInterface()
  */
-static void Dalvik_java_lang_Class_isInterface(const u4* args,
+static void Dalvik_java_lang_Class_isInterface(const u8* args,
     JValue* pResult)
 {
     ClassObject* thisPtr = (ClassObject*) args[0];
@@ -470,7 +470,7 @@ static void Dalvik_java_lang_Class_isInterface(const u4* args,
 /*
  * public boolean isPrimitive()
  */
-static void Dalvik_java_lang_Class_isPrimitive(const u4* args,
+static void Dalvik_java_lang_Class_isPrimitive(const u8* args,
     JValue* pResult)
 {
     ClassObject* thisPtr = (ClassObject*) args[0];
@@ -483,7 +483,7 @@ static void Dalvik_java_lang_Class_isPrimitive(const u4* args,
  *
  * Create a new instance of this class.
  */
-static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_Class_newInstance(const u8* args, JValue* pResult)
 {
     Thread* self = dvmThreadSelf();
     ClassObject* clazz = (ClassObject*) args[0];
@@ -564,7 +564,7 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
  *
  * Returns the signature annotation array.
  */
-static void Dalvik_java_lang_Class_getSignatureAnnotation(const u4* args,
+static void Dalvik_java_lang_Class_getSignatureAnnotation(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -579,7 +579,7 @@ static void Dalvik_java_lang_Class_getSignatureAnnotation(const u4* args,
  *
  * Get the class that encloses this class (if any).
  */
-static void Dalvik_java_lang_Class_getDeclaringClass(const u4* args,
+static void Dalvik_java_lang_Class_getDeclaringClass(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -594,7 +594,7 @@ static void Dalvik_java_lang_Class_getDeclaringClass(const u4* args,
  *
  * Get the class that encloses this class (if any).
  */
-static void Dalvik_java_lang_Class_getEnclosingClass(const u4* args,
+static void Dalvik_java_lang_Class_getEnclosingClass(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -609,7 +609,7 @@ static void Dalvik_java_lang_Class_getEnclosingClass(const u4* args,
  *
  * Get the constructor that encloses this class (if any).
  */
-static void Dalvik_java_lang_Class_getEnclosingConstructor(const u4* args,
+static void Dalvik_java_lang_Class_getEnclosingConstructor(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -630,7 +630,7 @@ static void Dalvik_java_lang_Class_getEnclosingConstructor(const u4* args,
  *
  * Get the method that encloses this class (if any).
  */
-static void Dalvik_java_lang_Class_getEnclosingMethod(const u4* args,
+static void Dalvik_java_lang_Class_getEnclosingMethod(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -647,7 +647,7 @@ static void Dalvik_java_lang_Class_getEnclosingMethod(const u4* args,
 }
 
 #if 0
-static void Dalvik_java_lang_Class_getGenericInterfaces(const u4* args,
+static void Dalvik_java_lang_Class_getGenericInterfaces(const u8* args,
     JValue* pResult)
 {
     dvmThrowException("Ljava/lang/UnsupportedOperationException;",
@@ -656,7 +656,7 @@ static void Dalvik_java_lang_Class_getGenericInterfaces(const u4* args,
     RETURN_PTR(NULL);
 }
 
-static void Dalvik_java_lang_Class_getGenericSuperclass(const u4* args,
+static void Dalvik_java_lang_Class_getGenericSuperclass(const u8* args,
     JValue* pResult)
 {
     dvmThrowException("Ljava/lang/UnsupportedOperationException;",
@@ -665,7 +665,7 @@ static void Dalvik_java_lang_Class_getGenericSuperclass(const u4* args,
     RETURN_PTR(NULL);
 }
 
-static void Dalvik_java_lang_Class_getTypeParameters(const u4* args,
+static void Dalvik_java_lang_Class_getTypeParameters(const u8* args,
     JValue* pResult)
 {
     dvmThrowException("Ljava/lang/UnsupportedOperationException;",
@@ -680,7 +680,7 @@ static void Dalvik_java_lang_Class_getTypeParameters(const u4* args,
  *
  * Returns true if this is an "anonymous" class.
  */
-static void Dalvik_java_lang_Class_isAnonymousClass(const u4* args,
+static void Dalvik_java_lang_Class_isAnonymousClass(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -704,7 +704,7 @@ static void Dalvik_java_lang_Class_isAnonymousClass(const u4* args,
  *
  * Return the annotations declared on this class.
  */
-static void Dalvik_java_lang_Class_getDeclaredAnnotations(const u4* args,
+static void Dalvik_java_lang_Class_getDeclaredAnnotations(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -719,7 +719,7 @@ static void Dalvik_java_lang_Class_getDeclaredAnnotations(const u4* args,
  *
  * Returns the simple name of a member class or local class, or null otherwise. 
  */
-static void Dalvik_java_lang_Class_getInnerClassName(const u4* args,
+static void Dalvik_java_lang_Class_getInnerClassName(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
@@ -737,7 +737,7 @@ static void Dalvik_java_lang_Class_getInnerClassName(const u4* args,
 /*
  * static native void setAccessibleNoCheck(AccessibleObject ao, boolean flag);
  */
-static void Dalvik_java_lang_Class_setAccessibleNoCheck(const u4* args,
+static void Dalvik_java_lang_Class_setAccessibleNoCheck(const u8* args,
     JValue* pResult)
 {
     Object* target = (Object*) args[0];

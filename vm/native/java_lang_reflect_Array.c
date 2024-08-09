@@ -27,7 +27,7 @@
  *
  * Create a one-dimensional array of Objects.
  */
-static void Dalvik_java_lang_reflect_Array_createObjectArray(const u4* args,
+static void Dalvik_java_lang_reflect_Array_createObjectArray(const u8* args,
     JValue* pResult)
 {
     ClassObject* elementClass = (ClassObject*) args[0];
@@ -61,7 +61,7 @@ static void Dalvik_java_lang_reflect_Array_createObjectArray(const u4* args,
  * subtract pieces off.  Besides, we want to start with the outermost
  * piece and work our way in.
  */
-static void Dalvik_java_lang_reflect_Array_createMultiArray(const u4* args,
+static void Dalvik_java_lang_reflect_Array_createMultiArray(const u8* args,
     JValue* pResult)
 {
     static const char kPrimLetter[] = PRIM_TYPE_TO_LETTER;

@@ -36,7 +36,7 @@
  *
  * Tells the VM to populate the properties table with VM defaults.
  */
-static void Dalvik_java_lang_SystemProperties_preInit(const u4* args,
+static void Dalvik_java_lang_SystemProperties_preInit(const u8* args,
     JValue* pResult)
 {
     dvmCreateDefaultProperties((Object*) args[0]);
@@ -48,7 +48,7 @@ static void Dalvik_java_lang_SystemProperties_preInit(const u4* args,
  *
  * Tells the VM to update properties with values from the command line.
  */
-static void Dalvik_java_lang_SystemProperties_postInit(const u4* args,
+static void Dalvik_java_lang_SystemProperties_postInit(const u8* args,
     JValue* pResult)
 {
     dvmSetCommandLineProperties((Object*) args[0]);

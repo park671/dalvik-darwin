@@ -739,6 +739,7 @@ bail:
  */
 ArrayObject* dvmGetDeclaredMethods(ClassObject* clazz, bool publicOnly)
 {
+    LOGD("[+] dvmGetDeclaredMethods: clazz=%p, public=%d\n", clazz, publicOnly);
     ArrayObject* methodArray;
     Object** methObjPtr;
     Method* meth;

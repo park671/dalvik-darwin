@@ -26,7 +26,7 @@
  *
  * Intern a string in the VM string table.
  */
-static void Dalvik_java_lang_String_intern(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_String_intern(const u8* args, JValue* pResult)
 {
     StringObject* str = (StringObject*) args[0];
     StringObject* interned;

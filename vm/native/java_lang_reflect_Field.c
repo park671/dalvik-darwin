@@ -143,7 +143,7 @@ static JValue* getFieldDataAddr(Object* obj, ClassObject* declaringClass,
  * public int getFieldModifiers(Class declaringClass, int slot)
  */
 static void Dalvik_java_lang_reflect_Field_getFieldModifiers(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ClassObject* declaringClass = (ClassObject*) args[1];
@@ -160,7 +160,7 @@ static void Dalvik_java_lang_reflect_Field_getFieldModifiers(
  *
  * Primitive types need to be boxed.
  */
-static void Dalvik_java_lang_reflect_Field_getField(const u4* args,
+static void Dalvik_java_lang_reflect_Field_getField(const u8* args,
     JValue* pResult)
 {
     // ignore thisPtr in args[0]
@@ -201,7 +201,7 @@ static void Dalvik_java_lang_reflect_Field_getField(const u4* args,
  * When assigning into a primitive field we will automatically extract
  * the value from box types.
  */
-static void Dalvik_java_lang_reflect_Field_setField(const u4* args,
+static void Dalvik_java_lang_reflect_Field_setField(const u8* args,
     JValue* pResult)
 {
     // ignore thisPtr in args[0]
@@ -260,7 +260,7 @@ static PrimitiveType convPrimType(int typeNum)
  *
  * The "type_no" is defined by the java.lang.reflect.Field class.
  */
-static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
+static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u8* args,
     JValue* pResult)
 {
     // ignore thisPtr in args[0]
@@ -311,7 +311,7 @@ static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
  *
  * The "type_no" is defined by the java.lang.reflect.Field class.
  */
-static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
+static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u8* args,
     JValue* pResult)
 {
     // ignore thisPtr in args[0]
@@ -364,7 +364,7 @@ static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
  * Return the annotations declared for this field.
  */
 static void Dalvik_java_lang_reflect_Field_getDeclaredAnnotations(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ClassObject* declaringClass = (ClassObject*) args[1];
@@ -384,7 +384,7 @@ static void Dalvik_java_lang_reflect_Field_getDeclaredAnnotations(
  *
  * Returns the signature annotation.
  */
-static void Dalvik_java_lang_reflect_Field_getSignatureAnnotation(const u4* args,
+static void Dalvik_java_lang_reflect_Field_getSignatureAnnotation(const u8* args,
     JValue* pResult)
 {
     // ignore thisPtr in args[0]

@@ -113,7 +113,7 @@ static void clearAllocProfStateFields(AllocProfState *allocProf,
  * thread.  If we actually start using the per-thread counters we'll
  * probably want to fix this.
  */
-static void Dalvik_dalvik_system_VMDebug_startAllocCounting(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_startAllocCounting(const u8* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
@@ -129,7 +129,7 @@ static void Dalvik_dalvik_system_VMDebug_startAllocCounting(const u4* args,
 /*
  * public static void stopAllocCounting()
  */
-static void Dalvik_dalvik_system_VMDebug_stopAllocCounting(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_stopAllocCounting(const u8* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
@@ -143,7 +143,7 @@ static void Dalvik_dalvik_system_VMDebug_stopAllocCounting(const u4* args,
 /*
  * private static int getAllocCount(int kind)
  */
-static void Dalvik_dalvik_system_VMDebug_getAllocCount(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_getAllocCount(const u8* args,
     JValue* pResult)
 {
 #ifdef WITH_PROFILER
@@ -197,7 +197,7 @@ static void Dalvik_dalvik_system_VMDebug_getAllocCount(const u4* args,
 /*
  * public static void resetAllocCount(int kinds)
  */
-static void Dalvik_dalvik_system_VMDebug_resetAllocCount(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_resetAllocCount(const u8* args,
     JValue* pResult)
 {
 #ifdef WITH_PROFILER
@@ -214,7 +214,7 @@ static void Dalvik_dalvik_system_VMDebug_resetAllocCount(const u4* args,
  *
  * Start method trace profiling.
  */
-static void Dalvik_dalvik_system_VMDebug_startMethodTracing(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_startMethodTracing(const u8* args,
     JValue* pResult)
 {
 #ifdef WITH_PROFILER
@@ -260,7 +260,7 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracing(const u4* args,
  *
  * Determine whether method tracing is currently active.
  */
-static void Dalvik_dalvik_system_VMDebug_isMethodTracingActive(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_isMethodTracingActive(const u8* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
@@ -277,7 +277,7 @@ static void Dalvik_dalvik_system_VMDebug_isMethodTracingActive(const u4* args,
  *
  * Stop method tracing.
  */
-static void Dalvik_dalvik_system_VMDebug_stopMethodTracing(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_stopMethodTracing(const u8* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
@@ -295,7 +295,7 @@ static void Dalvik_dalvik_system_VMDebug_stopMethodTracing(const u4* args,
  *
  * Start sending method trace info to the emulator.
  */
-static void Dalvik_dalvik_system_VMDebug_startEmulatorTracing(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_startEmulatorTracing(const u8* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
@@ -313,7 +313,7 @@ static void Dalvik_dalvik_system_VMDebug_startEmulatorTracing(const u4* args,
  *
  * Start sending method trace info to the emulator.
  */
-static void Dalvik_dalvik_system_VMDebug_stopEmulatorTracing(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_stopEmulatorTracing(const u8* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
@@ -332,7 +332,7 @@ static void Dalvik_dalvik_system_VMDebug_stopEmulatorTracing(const u4* args,
  * Set the current allocation limit in this thread.  Return the previous
  * value.
  */
-static void Dalvik_dalvik_system_VMDebug_setAllocationLimit(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_setAllocationLimit(const u8* args,
     JValue* pResult)
 {
 #if defined(WITH_ALLOC_LIMITS)
@@ -359,7 +359,7 @@ static void Dalvik_dalvik_system_VMDebug_setAllocationLimit(const u4* args,
  *
  * Set the allocation limit for this process.  Returns the previous value.
  */
-static void Dalvik_dalvik_system_VMDebug_setGlobalAllocationLimit(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_setGlobalAllocationLimit(const u8* args,
     JValue* pResult)
 {
 #if defined(WITH_ALLOC_LIMITS)
@@ -386,7 +386,7 @@ static void Dalvik_dalvik_system_VMDebug_setGlobalAllocationLimit(const u4* args
  *
  * Returns "true" if a debugger is attached.
  */
-static void Dalvik_dalvik_system_VMDebug_isDebuggerConnected(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_isDebuggerConnected(const u8* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
@@ -399,7 +399,7 @@ static void Dalvik_dalvik_system_VMDebug_isDebuggerConnected(const u4* args,
  *
  * Returns "true" if debugging is enabled.
  */
-static void Dalvik_dalvik_system_VMDebug_isDebuggingEnabled(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_isDebuggingEnabled(const u8* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
@@ -413,7 +413,7 @@ static void Dalvik_dalvik_system_VMDebug_isDebuggingEnabled(const u4* args,
  * Returns the time, in msec, since we last had an interaction with the
  * debugger (send or receive).
  */
-static void Dalvik_dalvik_system_VMDebug_lastDebuggerActivity(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_lastDebuggerActivity(const u8* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
@@ -424,7 +424,7 @@ static void Dalvik_dalvik_system_VMDebug_lastDebuggerActivity(const u4* args,
 /*
  * static void startInstructionCounting()
  */
-static void Dalvik_dalvik_system_VMDebug_startInstructionCounting(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_startInstructionCounting(const u8* args,
     JValue* pResult)
 {
 #if defined(WITH_PROFILER)
@@ -438,7 +438,7 @@ static void Dalvik_dalvik_system_VMDebug_startInstructionCounting(const u4* args
 /*
  * static void stopInstructionCounting()
  */
-static void Dalvik_dalvik_system_VMDebug_stopInstructionCounting(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_stopInstructionCounting(const u8* args,
     JValue* pResult)
 {
 #if defined(WITH_PROFILER)
@@ -458,7 +458,7 @@ static void Dalvik_dalvik_system_VMDebug_stopInstructionCounting(const u4* args,
  * to improve our chances of finishing without contention.  (Only makes
  * sense on a uniprocessor.)
  */
-static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u8* args,
     JValue* pResult)
 {
 #if defined(WITH_PROFILER)
@@ -480,7 +480,7 @@ static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u4* args,
  *
  * Reset the instruction count array.
  */
-static void Dalvik_dalvik_system_VMDebug_resetInstructionCount(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_resetInstructionCount(const u8* args,
     JValue* pResult)
 {
 #if defined(WITH_PROFILER)
@@ -497,7 +497,7 @@ static void Dalvik_dalvik_system_VMDebug_resetInstructionCount(const u4* args,
  *
  * Dump the list of loaded classes.
  */
-static void Dalvik_dalvik_system_VMDebug_printLoadedClasses(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_printLoadedClasses(const u8* args,
     JValue* pResult)
 {
     int flags = args[0];
@@ -512,7 +512,7 @@ static void Dalvik_dalvik_system_VMDebug_printLoadedClasses(const u4* args,
  *
  * Return the number of loaded classes
  */
-static void Dalvik_dalvik_system_VMDebug_getLoadedClassCount(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_getLoadedClassCount(const u8* args,
     JValue* pResult)
 {
     int count;
@@ -528,7 +528,7 @@ static void Dalvik_dalvik_system_VMDebug_getLoadedClassCount(const u4* args,
  * Returns the thread-specific CPU-time clock value for the current thread,
  * or -1 if the feature isn't supported.
  */
-static void Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos(const u8* args,
     JValue* pResult)
 {
     jlong result;
@@ -550,7 +550,7 @@ static void Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos(const u4* args,
  * Cause "hprof" data to be dumped.  We can throw an IOException if an
  * error occurs during file handling.
  */
-static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u8* args,
     JValue* pResult)
 {
 #ifdef WITH_HPROF

@@ -63,7 +63,7 @@ void dvmNativeShutdown(void)
  *
  * An exception is thrown on resolution failure.
  */
-void dvmResolveNativeMethod(const u4* args, JValue* pResult,
+void dvmResolveNativeMethod(const u8* args, JValue* pResult,
     const Method* method, Thread* self)
 {
     ClassObject* clazz = method->clazz;

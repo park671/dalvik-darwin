@@ -26,7 +26,7 @@
  *
  * Return the defining class loader of the caller's caller.
  */
-static void Dalvik_dalvik_system_VMStack_getCallingClassLoader(const u4* args,
+static void Dalvik_dalvik_system_VMStack_getCallingClassLoader(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = dvmGetCaller2Class(dvmThreadSelf()->curFrame);
@@ -43,7 +43,7 @@ static void Dalvik_dalvik_system_VMStack_getCallingClassLoader(const u4* args,
  *
  * Return the defining class loader of the caller's caller's caller.
  */
-static void Dalvik_dalvik_system_VMStack_getCallingClassLoader2(const u4* args,
+static void Dalvik_dalvik_system_VMStack_getCallingClassLoader2(const u8* args,
     JValue* pResult)
 {
     ClassObject* clazz = dvmGetCaller3Class(dvmThreadSelf()->curFrame);
@@ -62,7 +62,7 @@ static void Dalvik_dalvik_system_VMStack_getCallingClassLoader2(const u4* args,
  * first two and all reflection methods.  If "stopAtPrivileged" is set,
  * stop shortly after we encounter a privileged class.
  */
-static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
+static void Dalvik_dalvik_system_VMStack_getClasses(const u8* args,
     JValue* pResult)
 {
     /* note "maxSize" is unsigned, so -1 turns into a very large value */
@@ -160,7 +160,7 @@ bail:
  * Retrieve the stack trace of the specified thread and return it as an
  * array of StackTraceElement.  Returns NULL on failure.
  */
-static void Dalvik_dalvik_system_VMStack_getThreadStackTrace(const u4* args,
+static void Dalvik_dalvik_system_VMStack_getThreadStackTrace(const u8* args,
     JValue* pResult)
 {
     Object* targetThreadObj = (Object*) args[0];

@@ -28,7 +28,7 @@
  * Class.getSignatureAnnotation(), but available to java.lang.reflect.
  */
 static void Dalvik_java_lang_reflect_AccessibleObject_getClassSignatureAnnotation(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
     ArrayObject* arr = dvmGetClassSignatureAnnotation(clazz);

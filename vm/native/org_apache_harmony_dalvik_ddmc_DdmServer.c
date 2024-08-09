@@ -28,7 +28,7 @@
  * Send a DDM chunk to the server.
  */
 static void Dalvik_org_apache_harmony_dalvik_ddmc_DdmServer_nativeSendChunk(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     int type = args[0];
     ArrayObject* data = (ArrayObject*) args[1];

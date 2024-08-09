@@ -75,7 +75,7 @@ bool dvmLoadNativeCode(const char* fileName, Object* classLoader);
  *
  * Throws an exception and returns NULL on failure.
  */
-void dvmResolveNativeMethod(const u4* args, JValue* pResult,
+void dvmResolveNativeMethod(const u8* args, JValue* pResult,
     const Method* method, struct Thread* self);
 
 //#define GET_ARG_LONG(_args, _elem)          (*(s8*)(&(_args)[_elem]))
@@ -90,7 +90,7 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
  * Big/little endian shouldn't matter here -- ordering of words within a
  * long seems consistent across our supported platforms.
  */
-INLINE s8 dvmGetArgLong(const u4* args, int elem)
+INLINE s8 dvmGetArgLong(const u8* args, int elem)
 {
 #if 0
     union { u4 parts[2]; s8 whole; } conv;

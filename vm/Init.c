@@ -875,7 +875,7 @@ static void blockSignals() {
     }
 }
 
-const char *DEFAULT_BOOT_CLASSPATH = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin.jar";
+const char *DEFAULT_BOOT_CLASSPATH = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin_dex_v2.jar";
 /*
  * VM initialization.  Pass in any options provided on the command line.
  * Do not pass in the class name or the options for the class.

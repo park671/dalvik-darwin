@@ -48,15 +48,20 @@ int jniRegisterSystemMethods(JNIEnv* env)
     if (register_java_lang_System(env) != 0)
         goto bail;
 
+    if (register_org_apache_harmony_luni_platform_OSFileSystem(env) != 0)
+        goto bail;
+    if (register_org_apache_harmony_luni_platform_OSMemory(env) != 0)
+        goto bail;
+
     if (register_org_apache_harmony_luni_util_fltparse(env) != 0)
         goto bail;
     if (register_org_apache_harmony_luni_util_NumberConvert(env) != 0)
         goto bail;
 
-    if (register_java_net_InetAddress(env) != 0)
-        goto bail;
-    if (register_java_net_NetworkInterface(env) != 0)
-        goto bail;
+//    if (register_java_net_InetAddress(env) != 0)
+//        goto bail;
+//    if (register_java_net_NetworkInterface(env) != 0)
+//        goto bail;
 
     /*
      * Initialize the Android classes last, as they have dependencies

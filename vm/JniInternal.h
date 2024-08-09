@@ -116,9 +116,9 @@ INLINE void dvmSetJniEnvThreadId(JNIEnv* pEnv, Thread* self)
 /*
  * JNI call bridges.  Not usually called directly.
  */
-void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method,
+void dvmCallJNIMethod(const u8* args, JValue* pResult, const Method* method,
     Thread* self);
-void dvmCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
+void dvmCallSynchronizedJNIMethod(const u8* args, JValue* pResult,
     const Method* method, Thread* self);
 
 /*

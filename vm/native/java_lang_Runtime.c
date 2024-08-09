@@ -26,7 +26,7 @@
  *
  * Initiate a gc.
  */
-static void Dalvik_java_lang_Runtime_gc(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_Runtime_gc(const u8* args, JValue* pResult)
 {
     UNUSED_PARAMETER(args);
 
@@ -40,7 +40,7 @@ static void Dalvik_java_lang_Runtime_gc(const u4* args, JValue* pResult)
  * Runtime.exit() calls this after doing shutdown processing.  Runtime.halt()
  * uses this as well.
  */
-static void Dalvik_java_lang_Runtime_nativeExit(const u4* args,
+static void Dalvik_java_lang_Runtime_nativeExit(const u8* args,
     JValue* pResult)
 {
     int status = args[0];
@@ -62,7 +62,7 @@ static void Dalvik_java_lang_Runtime_nativeExit(const u4* args,
  * Load the specified full path as a dynamic library filled with
  * JNI-compatible methods.
  */
-static void Dalvik_java_lang_Runtime_nativeLoad(const u4* args,
+static void Dalvik_java_lang_Runtime_nativeLoad(const u8* args,
     JValue* pResult)
 {
     StringObject* fileNameObj = (StringObject*) args[0];
@@ -89,7 +89,7 @@ static void Dalvik_java_lang_Runtime_nativeLoad(const u4* args,
  * run finalizers before returning, but it's not guaranteed to actually
  * do anything.
  */
-static void Dalvik_java_lang_Runtime_runFinalization(const u4* args,
+static void Dalvik_java_lang_Runtime_runFinalization(const u8* args,
     JValue* pResult)
 {
     bool forced = (args[0] != 0);
@@ -110,7 +110,7 @@ static void Dalvik_java_lang_Runtime_runFinalization(const u4* args,
  *
  * Returns GC heap max memory in bytes.
  */
-static void Dalvik_java_lang_Runtime_maxMemory(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_Runtime_maxMemory(const u8* args, JValue* pResult)
 {
     unsigned int result = gDvm.heapSizeMax;
     RETURN_LONG(result);
@@ -121,7 +121,7 @@ static void Dalvik_java_lang_Runtime_maxMemory(const u4* args, JValue* pResult)
  *
  * Returns GC heap total memory in bytes.
  */
-static void Dalvik_java_lang_Runtime_totalMemory(const u4* args,
+static void Dalvik_java_lang_Runtime_totalMemory(const u8* args,
     JValue* pResult)
 {
     int result = dvmGetHeapDebugInfo(kVirtualHeapSize);
@@ -133,7 +133,7 @@ static void Dalvik_java_lang_Runtime_totalMemory(const u4* args,
  *
  * Returns GC heap free memory in bytes.
  */
-static void Dalvik_java_lang_Runtime_freeMemory(const u4* args,
+static void Dalvik_java_lang_Runtime_freeMemory(const u8* args,
     JValue* pResult)
 {
     int result = dvmGetHeapDebugInfo(kVirtualHeapSize)

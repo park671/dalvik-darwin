@@ -1037,7 +1037,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
         LOGD("GC freed %d objects / %zd bytes in %d sec\n",
                 numFreed, sizeFreed, (int)(gcElapsedTime / 1000));
     }
-    dvmLogGcStats(numFreed, sizeFreed, gcElapsedTime);
+//    dvmLogGcStats(numFreed, sizeFreed, gcElapsedTime);
 
     if (gcHeap->ddmHpifWhen != 0) {
         LOGD_HEAP("Sending VM heap info to DDM\n");

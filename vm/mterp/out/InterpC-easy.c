@@ -87,10 +87,10 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
     fp = interpState->fp;
     retval = interpState->retval;
     methodClassDex = curMethod->clazz->pDvmDex;
-    LOGVV("dvmInterpretStd: threadid=%d: entry(%s) %s.%s pc=0x%lx fp=%p ep=%d\n",
-          self->threadId, (interpState->nextMode == INTERP_STD) ? "STD" : "DBG",
-          curMethod->clazz->descriptor, curMethod->name, pc - curMethod->insns,
-          fp, interpState->entryPoint);
+            LOGVV("dvmInterpretStd: threadid=%d: entry(%s) %s.%s pc=0x%lx fp=%p ep=%d\n",
+                  self->threadId, (interpState->nextMode == INTERP_STD) ? "STD" : "DBG",
+                  curMethod->clazz->descriptor, curMethod->name, pc - curMethod->insns,
+                  fp, interpState->entryPoint);
     methodToCall = (const Method *) -1;
     switch (interpState->entryPoint) {
         case kInterpEntryInstr:
@@ -4303,6 +4303,7 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                 } else {
                     assert((vsrc1 >> 4) > 0);
                     ((void) 0);
+                    LOGD("[-] fp=%p, fp addr offset=%d\n", fp, (vdst & 0x0f));
                     thisPtr = (Object *) (fp[(vdst & 0x0f)]);
                 }
                 if (!checkForNull(thisPtr))
@@ -4504,15 +4505,22 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     }
                 };
                 ((void) 0);
+                LOGD("[-] return from %p", fp);
                 saveArea = SAVEAREA_FROM_FP(fp);
                 fp = saveArea->prevFrame;
+                LOGD(" to %p, current method addr=%p\n", fp, SAVEAREA_FROM_FP(fp)->method);
                 assert(fp != NULL);
                 if (dvmIsBreakFrame(fp)) {
-                            LOGVV("+++ returned into break frame\n");
+                            LOGVV("+++ returned into break frame(std\n");
+                            LOGVV("+++ next frame addr=%p\n", SAVEAREA_FROM_FP(fp)->prevFrame);
                     goto bail;;
                 }
                 self->curFrame = fp;
                 curMethod = SAVEAREA_FROM_FP(fp)->method;
+                LOGD("current fp method=%s\n", curMethod->name);
+                if(strcmp("findMethodByName", curMethod->name) == 0) {
+                    LOGD("[-] findMethodByName\n");
+                }
                 methodClassDex = curMethod->clazz->pDvmDex;
                 pc = saveArea->savedPc;
                 ((void) 0);
@@ -4604,7 +4612,10 @@ bool dvmInterpretStd(Thread *self, InterpState *interpState) {
                     StackSaveArea *newSaveArea;
                     u8 *newFp;
                     ((void) 0);
-                    newFp = (u8 *) SAVEAREA_FROM_FP(fp) - methodToCall->registersSize;
+                    newFp = ((u8 *) SAVEAREA_FROM_FP(fp)) - methodToCall->registersSize;
+                    LOGD("[+] new fp from %p to %p, old fp method addr=%p, new fp method addr=%p\n", fp, newFp,
+                         SAVEAREA_FROM_FP(fp)->method, methodToCall);
+                    LOGD("[+] reg size=%d\n", methodToCall->registersSize);
                     newSaveArea = SAVEAREA_FROM_FP(newFp);
                     if (true) {
                         u_int8_t *bottom;

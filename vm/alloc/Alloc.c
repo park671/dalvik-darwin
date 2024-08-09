@@ -187,10 +187,6 @@ Object* dvmCloneObject(Object* obj)
     copy = dvmMalloc(size, flags);
     if (copy == NULL)
         return NULL;
-#if WITH_HPROF && WITH_HPROF_STACK
-    hprofFillInStackTrace(copy);
-    dvmTrackAllocation(obj->clazz, size);
-#endif
 
     memcpy(copy, obj, size);
     DVM_LOCK_INIT(&copy->lock);

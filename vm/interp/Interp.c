@@ -41,8 +41,7 @@
  * This shouldn't be necessary -- the global area is initially zeroed out,
  * and the events should be cleaning up after themselves.
  */
-void dvmInitBreakpoints(void)
-{
+void dvmInitBreakpoints(void) {
 #ifdef WITH_DEBUGGER
     memset(gDvm.debugBreakAddr, 0, sizeof(gDvm.debugBreakAddr));
 #else
@@ -64,8 +63,7 @@ void dvmInitBreakpoints(void)
  *
  * "addr" is the absolute address of the breakpoint bytecode.
  */
-void dvmAddBreakAddr(Method* method, int instrOffset)
-{
+void dvmAddBreakAddr(Method *method, int instrOffset) {
 #ifdef WITH_DEBUGGER
     const u2* addr = method->insns + instrOffset;
     const u2** ptr = gDvm.debugBreakAddr;
@@ -102,8 +100,7 @@ void dvmAddBreakAddr(Method* method, int instrOffset)
  * synchronized, so it should not be possible for two threads to be
  * updating breakpoints at the same time.
  */
-void dvmClearBreakAddr(Method* method, int instrOffset)
-{
+void dvmClearBreakAddr(Method *method, int instrOffset) {
 #ifdef WITH_DEBUGGER
     const u2* addr = method->insns + instrOffset;
     const u2** ptr = gDvm.debugBreakAddr;
@@ -140,8 +137,7 @@ void dvmClearBreakAddr(Method* method, int instrOffset)
  *
  * This is only called from the JDWP thread.
  */
-bool dvmAddSingleStep(Thread* thread, int size, int depth)
-{
+bool dvmAddSingleStep(Thread *thread, int size, int depth) {
 #ifdef WITH_DEBUGGER
     StepControl* pCtrl = &gDvm.stepControl;
 
@@ -247,8 +243,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
 /*
  * Disable a single step event.
  */
-void dvmClearSingleStep(Thread* thread)
-{
+void dvmClearSingleStep(Thread *thread) {
 #ifdef WITH_DEBUGGER
     UNUSED_PARAMETER(thread);
 
@@ -276,11 +271,10 @@ void dvmClearSingleStep(Thread* thread)
  * Because we need it when setting up debugger event filters, we want to
  * be able to do this quickly.
  */
-Object* dvmGetThisPtr(const Method* method, const u4* fp)
-{
+Object *dvmGetThisPtr(const Method *method, const u4 *fp) {
     if (dvmIsStaticMethod(method))
         return NULL;
-    return (Object*)fp[method->registersSize - method->insSize];
+    return (Object *) fp[method->registersSize - method->insSize];
 }
 
 
@@ -382,9 +376,11 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
  * "switchData" must be 32-bit aligned.
  */
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-static inline s4 s4FromSwitchData(const void* switchData) {
-    return *(s4*) switchData;
+
+static inline s4 s4FromSwitchData(const void *switchData) {
+    return *(s4 *) switchData;
 }
+
 #else
 static inline s4 s4FromSwitchData(const void* switchData) {
     u2* data = switchData;
@@ -397,12 +393,11 @@ static inline s4 s4FromSwitchData(const void* switchData) {
  * Returns 3 if we don't find a match (it's the size of the packed-switch
  * instruction).
  */
-s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
-{
+s4 dvmInterpHandlePackedSwitch(const u2 *switchData, s4 testVal) {
     const int kInstrLen = 3;
     u2 size;
     s4 firstKey;
-    const s4* entries;
+    const s4 *entries;
 
     /*
      * Packed switch data format:
@@ -416,7 +411,7 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
     if (*switchData++ != kPackedSwitchSignature) {
         /* should have been caught by verifier */
         dvmThrowException("Ljava/lang/InternalError;",
-            "bad packed switch magic");
+                          "bad packed switch magic");
         return kInstrLen;
     }
 
@@ -427,21 +422,21 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
     firstKey |= (*switchData++) << 16;
 
     if (testVal < firstKey || testVal >= firstKey + size) {
-        LOGVV("Value %d not found in switch (%d-%d)\n",
-            testVal, firstKey, firstKey+size-1);
+                LOGVV("Value %d not found in switch (%d-%d)\n",
+                      testVal, firstKey, firstKey + size - 1);
         return kInstrLen;
     }
 
     /* The entries are guaranteed to be aligned on a 32-bit boundary;
      * we can treat them as a native int array.
      */
-    entries = (const s4*) switchData;
-    assert(((u4)entries & 0x3) == 0);
+    entries = (const s4 *) switchData;
+    assert(((u4) entries & 0x3) == 0);
 
     assert(testVal - firstKey >= 0 && testVal - firstKey < size);
-    LOGVV("Value %d found in slot %d (goto 0x%02x)\n",
-        testVal, testVal - firstKey,
-        s4FromSwitchData(&entries[testVal - firstKey]));
+            LOGVV("Value %d found in slot %d (goto 0x%02x)\n",
+                  testVal, testVal - firstKey,
+                  s4FromSwitchData(&entries[testVal - firstKey]));
     return s4FromSwitchData(&entries[testVal - firstKey]);
 }
 
@@ -451,12 +446,11 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
  * Returns 3 if we don't find a match (it's the size of the sparse-switch
  * instruction).
  */
-s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
-{
+s4 dvmInterpHandleSparseSwitch(const u2 *switchData, s4 testVal) {
     const int kInstrLen = 3;
     u2 ident, size;
-    const s4* keys;
-    const s4* entries;
+    const s4 *keys;
+    const s4 *entries;
     int i;
 
     /*
@@ -472,24 +466,24 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
     if (*switchData++ != kSparseSwitchSignature) {
         /* should have been caught by verifier */
         dvmThrowException("Ljava/lang/InternalError;",
-            "bad sparse switch magic");
+                          "bad sparse switch magic");
         return kInstrLen;
     }
 
     size = *switchData++;
     assert(size > 0);
-    
+
     /* The keys are guaranteed to be aligned on a 32-bit boundary;
      * we can treat them as a native int array.
      */
-    keys = (const s4*) switchData;
-    assert(((u4)keys & 0x3) == 0);
+    keys = (const s4 *) switchData;
+    assert(((u4) keys & 0x3) == 0);
 
     /* The entries are guaranteed to be aligned on a 32-bit boundary;
      * we can treat them as a native int array.
      */
     entries = keys + size;
-    assert(((u4)entries & 0x3) == 0);
+    assert(((u4) entries & 0x3) == 0);
 
     /*
      * Run through the list of keys, which are guaranteed to
@@ -501,15 +495,15 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
     for (i = 0; i < size; i++) {
         s4 k = s4FromSwitchData(&keys[i]);
         if (k == testVal) {
-            LOGVV("Value %d found in entry %d (goto 0x%02x)\n",
-                testVal, i, s4FromSwitchData(&entries[i]));
+                    LOGVV("Value %d found in entry %d (goto 0x%02x)\n",
+                          testVal, i, s4FromSwitchData(&entries[i]));
             return s4FromSwitchData(&entries[i]);
         } else if (k > testVal) {
             break;
         }
     }
 
-    LOGVV("Value %d not found in switch\n", testVal);
+            LOGVV("Value %d not found in switch\n", testVal);
     return kInstrLen;
 }
 
@@ -519,8 +513,7 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
  * Returns true if job is completed, otherwise false to indicate that
  * an exception has been thrown.
  */
-bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
-{
+bool dvmInterpHandleFillArrayData(ArrayObject *arrayObj, const u2 *arrayData) {
     u2 width;
     u4 size;
 
@@ -545,13 +538,13 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
     }
 
     width = arrayData[1];
-    size = arrayData[2] | (((u4)arrayData[3]) << 16);
+    size = arrayData[2] | (((u4) arrayData[3]) << 16);
 
     if (size > arrayObj->length) {
         dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", NULL);
         return false;
     }
-    memcpy(arrayObj->contents, &arrayData[4], size*width);
+    memcpy(arrayObj->contents, &arrayData[4], size * width);
     return true;
 }
 
@@ -561,11 +554,10 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
  *
  * Returns NULL with an exception raised on failure.
  */
-Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
-    const Method* method, DvmDex* methodClassDex)
-{
-    Method* absMethod;
-    Method* methodToCall;
+Method *dvmInterpFindInterfaceMethod(ClassObject *thisClass, u4 methodIdx,
+                                     const Method *method, DvmDex *methodClassDex) {
+    Method *absMethod;
+    Method *methodToCall;
     int i, vtableIndex;
 
     /*
@@ -601,15 +593,15 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
     if (i == thisClass->iftableCount) {
         /* impossible in verified DEX, need to check for it in unverified */
         dvmThrowException("Ljava/lang/IncompatibleClassChangeError;",
-            "interface not implemented");
+                          "interface not implemented");
         return NULL;
     }
 
     assert(absMethod->methodIndex <
-        thisClass->iftable[i].clazz->virtualMethodCount);
+           thisClass->iftable[i].clazz->virtualMethodCount);
 
     vtableIndex =
-        thisClass->iftable[i].methodIndexArray[absMethod->methodIndex];
+            thisClass->iftable[i].methodIndexArray[absMethod->methodIndex];
     assert(vtableIndex >= 0 && vtableIndex < thisClass->vtableCount);
     methodToCall = thisClass->vtable[vtableIndex];
 
@@ -622,12 +614,12 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
     }
 #else
     assert(!dvmIsAbstractMethod(methodToCall) ||
-        methodToCall->nativeFunc != NULL);
+           methodToCall->nativeFunc != NULL);
 #endif
 
-    LOGVV("+++ interface=%s.%s concrete=%s.%s\n",
-        absMethod->clazz->descriptor, absMethod->name,
-        methodToCall->clazz->descriptor, methodToCall->name);
+            LOGVV("+++ interface=%s.%s concrete=%s.%s\n",
+                  absMethod->clazz->descriptor, absMethod->name,
+                  methodToCall->clazz->descriptor, methodToCall->name);
     assert(methodToCall != NULL);
 
     return methodToCall;
@@ -645,8 +637,7 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
  * The interpreted stack frame, which holds the method arguments, has
  * already been set up.
  */
-void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
-{
+void dvmInterpret(Thread *self, const Method *method, JValue *pResult) {
     InterpState interpState;
     bool change;
 
@@ -664,7 +655,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      * No need to initialize "retval".
      */
     interpState.method = method;
-    interpState.fp = (u8*) self->curFrame;
+    interpState.fp = (u8 *) self->curFrame;
     interpState.pc = method->insns;
     interpState.entryPoint = kInterpEntryInstr;
 
@@ -680,26 +671,25 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      * here otherwise.
      */
     if (method->clazz->status < CLASS_INITIALIZING ||
-        method->clazz->status == CLASS_ERROR)
-    {
+        method->clazz->status == CLASS_ERROR) {
         LOGE("ERROR: tried to execute code in unprepared class '%s' (%d)\n",
-            method->clazz->descriptor, method->clazz->status);
+             method->clazz->descriptor, method->clazz->status);
         dvmDumpThread(self, false);
         dvmAbort();
     }
 
-    typedef bool (*Interpreter)(Thread*, InterpState*);
+    typedef bool (*Interpreter)(Thread *, InterpState *);
     Interpreter stdInterp = dvmInterpretStd;
 
     change = true;
     while (change) {
         switch (interpState.nextMode) {
-        case INTERP_STD:
-            LOGVV("threadid=%d: interp STD\n", self->threadId);
-            change = (*stdInterp)(self, &interpState);
-            break;
-        default:
-            dvmAbort();
+            case INTERP_STD:
+                        LOGVV("threadid=%d: interp STD\n", self->threadId);
+                change = (*stdInterp)(self, &interpState);
+                break;
+            default:
+                dvmAbort();
         }
     }
 

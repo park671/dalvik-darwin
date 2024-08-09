@@ -43,7 +43,7 @@
  * results to be contiguous, but we'll guarantee
  * that they are.
  */
-#define HAVE_MMAP 0
+#define HAVE_MMAP 1
 #define HAVE_MORECORE 1
 #define MORECORE_CONTIGUOUS 0
 /* m is always the appropriate local when MORECORE() is called. */

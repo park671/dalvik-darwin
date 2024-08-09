@@ -2,16 +2,13 @@ cmake_minimum_required(VERSION 3.28)
 project(libdvm)
 
 # Compiler flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps -DWITH_PROFILER -DWITH_DEBUGGER -DDVM_RESOLVER_CACHE=0")
-
-# Enable deadlock prediction
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWITH_DEADLOCK_PREDICTION -DWITH_MONITOR_TRACKING")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps -DDVM_RESOLVER_CACHE=0")
 
 # Enable monitor tracking
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWITH_MONITOR_TRACKING")
 
 # Debug dalvik
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWITH_INSTR_CHECKS -DWITH_EXTRA_OBJECT_VALIDATION -DWITH_TRACKREF_CHECKS -DWITH_ALLOC_LIMITS -DDVM_SHOW_EXCEPTION=3 -DEASY_GDB")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWITH_INSTR_CHECKS -DDVM_SHOW_EXCEPTION=3")
 
 # Source files
 set(SOURCE_FILES

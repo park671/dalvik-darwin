@@ -19,7 +19,6 @@
  * See the majestic ASCII art in Stack.h.
  */
 #include "Dalvik.h"
-#include "jni.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -57,15 +56,15 @@ bool dvmInitInterpStack(Thread *thread, int stackSize) {
 static bool dvmPushInterpFrame(Thread *self, const Method *method) {
     StackSaveArea *saveBlock;
     StackSaveArea *breakSaveBlock;
-    int stackReq;
+    u8 stackReq;
     u1 *stackPtr;
 
     assert(!dvmIsNativeMethod(method));
     assert(!dvmIsAbstractMethod(method));
 
-    stackReq = method->registersSize * 4        // params + locals
+    stackReq = method->registersSize * REG_BYTE_SIZE        // params + locals
                + sizeof(StackSaveArea) * 2     // break frame + regular frame
-               + method->outsSize * 4;         // args to other methods
+               + method->outsSize * REG_BYTE_SIZE;         // args to other methods
 
     if (self->curFrame != NULL)
         stackPtr = (u1 *) SAVEAREA_FROM_FP(self->curFrame);
@@ -88,18 +87,13 @@ static bool dvmPushInterpFrame(Thread *self, const Method *method) {
      */
     stackPtr -= sizeof(StackSaveArea);
     breakSaveBlock = (StackSaveArea *) stackPtr;
-    stackPtr -= method->registersSize * 4 + sizeof(StackSaveArea);
+    stackPtr -= method->registersSize * REG_BYTE_SIZE + sizeof(StackSaveArea);
     saveBlock = (StackSaveArea *) stackPtr;
 
 #if !defined(NDEBUG) && !defined(PAD_SAVE_AREA)
     /* debug -- memset the new stack, unless we want valgrind's help */
-    memset(stackPtr - (method->outsSize * 4), 0xaf, stackReq);
+    memset(stackPtr - (method->outsSize * REG_BYTE_SIZE), 0xaf, stackReq);
 #endif
-#ifdef EASY_GDB
-    breakSaveBlock->prevSave = FP_FROM_SAVEAREA(self->curFrame);
-    saveBlock->prevSave = breakSaveBlock;
-#endif
-
     breakSaveBlock->prevFrame = self->curFrame;
     breakSaveBlock->savedPc = NULL;             // not required
     breakSaveBlock->xtra.localRefTop = NULL;    // not required
@@ -108,7 +102,6 @@ static bool dvmPushInterpFrame(Thread *self, const Method *method) {
     saveBlock->savedPc = NULL;                  // not required
     saveBlock->xtra.currentPc = NULL;           // not required?
     saveBlock->method = method;
-
             LOGVV("PUSH frame: old=%p new=%p (size=%ld)\n",
                   self->curFrame, FP_FROM_SAVEAREA(saveBlock),
                   (u1 *) self->curFrame - (u1 *) FP_FROM_SAVEAREA(saveBlock));
@@ -130,12 +123,12 @@ static bool dvmPushInterpFrame(Thread *self, const Method *method) {
 bool dvmPushJNIFrame(Thread *self, const Method *method) {
     StackSaveArea *saveBlock;
     StackSaveArea *breakSaveBlock;
-    int stackReq;
+    u8 stackReq;
     u1 *stackPtr;
 
     assert(dvmIsNativeMethod(method));
 
-    stackReq = method->registersSize * 4        // params only
+    stackReq = method->registersSize * REG_BYTE_SIZE        // params only
                + sizeof(StackSaveArea) * 2;    // break frame + regular frame
 
     if (self->curFrame != NULL)
@@ -160,7 +153,7 @@ bool dvmPushJNIFrame(Thread *self, const Method *method) {
      */
     stackPtr -= sizeof(StackSaveArea);
     breakSaveBlock = (StackSaveArea *) stackPtr;
-    stackPtr -= method->registersSize * 4 + sizeof(StackSaveArea);
+    stackPtr -= method->registersSize * REG_BYTE_SIZE + sizeof(StackSaveArea);
     saveBlock = (StackSaveArea *) stackPtr;
 
 #if !defined(NDEBUG) && !defined(PAD_SAVE_AREA)
@@ -201,7 +194,7 @@ bool dvmPushJNIFrame(Thread *self, const Method *method) {
  */
 bool dvmPushLocalFrame(Thread *self, const Method *method) {
     StackSaveArea *saveBlock;
-    int stackReq;
+    u8 stackReq;
     u1 *stackPtr;
 
     assert(dvmIsNativeMethod(method));
@@ -241,7 +234,7 @@ bool dvmPushLocalFrame(Thread *self, const Method *method) {
     saveBlock->xtra.localRefTop = self->jniLocalRefTable.nextEntry;
     saveBlock->method = method;
 
-            LOGVV("PUSH JNI local frame: old=%p new=%p (size=%d)\n",
+            LOGVV("PUSH JNI local frame: old=%p new=%p (size=%ld)\n",
                   self->curFrame, FP_FROM_SAVEAREA(saveBlock),
                   (u1 *) self->curFrame - (u1 *) FP_FROM_SAVEAREA(saveBlock));
 
@@ -290,6 +283,7 @@ bool dvmPopLocalFrame(Thread *self) {
  * Returns "false" if there was no frame to pop.
  */
 static bool dvmPopFrame(Thread *self) {
+    LOGE("[-] dvmPopFrame!\n");
     StackSaveArea *saveBlock;
 
     if (self->curFrame == NULL)
@@ -326,8 +320,7 @@ static bool dvmPopFrame(Thread *self) {
         dvmAbort();     // stack trashed -- nowhere to go in this thread
     }
 
-            LOGVV("POP frame: cur=%p new=%p\n",
-                  self->curFrame, saveBlock->prevFrame);
+    LOGVV("POP frame: cur=%p new=%p\n", self->curFrame, saveBlock->prevFrame);
 
     self->curFrame = saveBlock->prevFrame;
     return true;

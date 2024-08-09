@@ -25,7 +25,7 @@
  * public int getConstructorModifiers(Class declaringClass, int slot)
  */
 static void Dalvik_java_lang_reflect_Constructor_getConstructorModifiers(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ClassObject* declaringClass = (ClassObject*) args[1];
@@ -47,7 +47,7 @@ static void Dalvik_java_lang_reflect_Constructor_getConstructorModifiers(
  * with an interface, array, or primitive class.
  */
 static void Dalvik_java_lang_reflect_Constructor_constructNative(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ArrayObject* argList = (ArrayObject*) args[1];
@@ -92,7 +92,7 @@ static void Dalvik_java_lang_reflect_Constructor_constructNative(
  * Return the annotations declared for this constructor.
  */
 static void Dalvik_java_lang_reflect_Constructor_getDeclaredAnnotations(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ClassObject* declaringClass = (ClassObject*) args[1];
@@ -113,7 +113,7 @@ static void Dalvik_java_lang_reflect_Constructor_getDeclaredAnnotations(
  * Return the annotations declared for this constructor's parameters.
  */
 static void Dalvik_java_lang_reflect_Constructor_getParameterAnnotations(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ClassObject* declaringClass = (ClassObject*) args[1];
@@ -134,7 +134,7 @@ static void Dalvik_java_lang_reflect_Constructor_getParameterAnnotations(
  * Returns the signature annotation.
  */
 static void Dalvik_java_lang_reflect_Constructor_getSignatureAnnotation(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     // ignore thisPtr in args[0]
     ClassObject* declaringClass = (ClassObject*) args[1];

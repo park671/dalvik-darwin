@@ -3510,7 +3510,7 @@ GOTO_TARGET(returnFromMethod)
         assert(fp != NULL);
         if (dvmIsBreakFrame(fp)) {
             /* bail without popping the method frame from stack */
-            LOGVV("+++ returned into break frame\n");
+            LOGVV("+++ returned into break frame(stupid!\n");
             GOTO_bail();
         }
 

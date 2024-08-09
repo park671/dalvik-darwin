@@ -64,7 +64,7 @@ static int hashcmpDexOrJar(const void* tableVal, const void* newVal)
  *
  * Expects that the hash table will be *unlocked* here.
  */
-static bool validateCookie(int cookie)
+static bool validateCookie(u8 cookie)
 {
     DexOrJar* pDexOrJar = (DexOrJar*) cookie;
 
@@ -101,7 +101,7 @@ static bool validateCookie(int cookie)
  * table and refCount them.  Requires atomic ops or adding "synchronized"
  * to the non-native code that calls here.
  */
-static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
+static void Dalvik_dalvik_system_DexFile_openDexFile(const u8* args,
     JValue* pResult)
 {
     StringObject* sourceNameObj = (StringObject*) args[0];
@@ -201,7 +201,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
  *
  * Release resources associated with a user-loaded DEX file.
  */
-static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
+static void Dalvik_dalvik_system_DexFile_closeDexFile(const u8* args,
     JValue* pResult)
 {
     int cookie = args[0];
@@ -252,12 +252,12 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
  * Returns a null pointer with no exception if the class was not found.
  * Throws an exception on other failures.
  */
-static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
+static void Dalvik_dalvik_system_DexFile_defineClass(const u8* args,
     JValue* pResult)
 {
     StringObject* nameObj = (StringObject*) args[0];
     Object* loader = (Object*) args[1];
-    int cookie = args[2];
+    u8 cookie = args[2];
     Object* pd = (Object*) args[3];
     ClassObject* clazz = NULL;
     DexOrJar* pDexOrJar = (DexOrJar*) cookie;
@@ -321,7 +321,7 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
  * Returns a String array that holds the names of all classes in the
  * specified DEX file.
  */
-static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
+static void Dalvik_dalvik_system_DexFile_getClassNameList(const u8* args,
     JValue* pResult)
 {
     int cookie = args[0];
@@ -380,7 +380,7 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
  * @throws dalvik.system.StaleDexCacheError if the optimized dex file
  *         is stale but exists on a read-only partition.
  */
-static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
+static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u8* args,
     JValue* pResult)
 {
     LOGD("[+] Dalvik_dalvik_system_DexFile_isDexOptNeeded()\n");

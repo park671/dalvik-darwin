@@ -30,7 +30,7 @@
  * between zero and one.
  */
 static void Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     UNUSED_PARAMETER(args);
 
@@ -46,7 +46,7 @@ static void Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization(
  * Note that this is NOT static.
  */
 static void Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     dvmSetTargetHeapUtilization(dvmU4ToFloat(args[1]));
 
@@ -61,7 +61,7 @@ static void Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization(
  * zero, removes the current minimum constraint (if present).
  */
 static void Dalvik_dalvik_system_VMRuntime_nativeMinimumHeapSize(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     s8 longSize = GET_ARG_LONG(args, 1);
     size_t size;
@@ -87,7 +87,7 @@ static void Dalvik_dalvik_system_VMRuntime_nativeMinimumHeapSize(
  * Does a GC and forces collection of SoftReferences that are
  * not strongly-reachable.
  */
-static void Dalvik_dalvik_system_VMRuntime_gcSoftReferences(const u4* args,
+static void Dalvik_dalvik_system_VMRuntime_gcSoftReferences(const u8* args,
     JValue* pResult)
 {
     dvmCollectGarbage(true);
@@ -104,7 +104,7 @@ static void Dalvik_dalvik_system_VMRuntime_gcSoftReferences(const u4* args,
  *
  * Used by zygote, which doesn't have a HeapWorker thread.
  */
-static void Dalvik_dalvik_system_VMRuntime_runFinalizationSync(const u4* args,
+static void Dalvik_dalvik_system_VMRuntime_runFinalizationSync(const u8* args,
     JValue* pResult)
 {
     dvmRunFinalizationSync();
@@ -122,7 +122,7 @@ static void Dalvik_dalvik_system_VMRuntime_runFinalizationSync(const u4* args,
  * will not update its internal counts.
  */
 static void Dalvik_dalvik_system_VMRuntime_trackExternalAllocation(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     s8 longSize = GET_ARG_LONG(args, 1);
 
@@ -147,7 +147,7 @@ static void Dalvik_dalvik_system_VMRuntime_trackExternalAllocation(
  * available to Dalvik threads.
  */
 static void Dalvik_dalvik_system_VMRuntime_trackExternalFree(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     s8 longSize = GET_ARG_LONG(args, 1);
 
@@ -173,7 +173,7 @@ static void Dalvik_dalvik_system_VMRuntime_trackExternalFree(
  * trackExternalAllocation/Free().
  */
 static void Dalvik_dalvik_system_VMRuntime_getExternalBytesAllocated(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     RETURN_LONG((s8)dvmGetExternalBytesAllocated());
 }

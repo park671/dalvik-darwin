@@ -39,9 +39,9 @@ static void updateExceptionClassList(const Method* method, PointerSet* throws);
 static void createConstructor(ClassObject* clazz, Method* meth);
 static void createHandlerMethod(ClassObject* clazz, Method* dstMeth,
     const Method* srcMeth);
-static void proxyConstructor(const u4* args, JValue* pResult,
+static void proxyConstructor(const u8* args, JValue* pResult,
     const Method* method, Thread* self);
-static void proxyInvoker(const u4* args, JValue* pResult,
+static void proxyInvoker(const u8* args, JValue* pResult,
     const Method* method, Thread* self);
 static bool mustWrapException(const Method* method, const Object* throwable);
 
@@ -908,7 +908,7 @@ bail:
  * This is the constructor for a generated proxy object.  All we need to
  * do is stuff "handler" into "h".
  */
-static void proxyConstructor(const u4* args, JValue* pResult,
+static void proxyConstructor(const u8* args, JValue* pResult,
     const Method* method, Thread* self)
 {
     Object* obj = (Object*) args[0];
@@ -927,7 +927,7 @@ static void proxyConstructor(const u4* args, JValue* pResult,
  * a new Object[] array, make the call, and unbox the return value if
  * necessary.
  */
-static void proxyInvoker(const u4* args, JValue* pResult,
+static void proxyInvoker(const u8* args, JValue* pResult,
     const Method* method, Thread* self)
 {
     Object* thisObj = (Object*) args[0];

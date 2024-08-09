@@ -221,7 +221,7 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
 }
 
 /* native public static int fork(); */
-static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
+static void Dalvik_dalvik_system_Zygote_fork(const u8* args, JValue* pResult)
 {
     pid_t pid;
     int err;
@@ -383,7 +383,7 @@ static pid_t forkAndSpecializeCommon(const u4* args)
 /* native public static int forkAndSpecialize(int uid, int gid, 
  *     int[] gids, int debugFlags); 
  */
-static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
+static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u8* args,
     JValue* pResult)
 {
     pid_t pid;
@@ -397,7 +397,7 @@ static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
  *     int[] gids, int debugFlags); 
  */
 static void Dalvik_dalvik_system_Zygote_forkSystemServer(
-        const u4* args, JValue* pResult)
+        const u8* args, JValue* pResult)
 {
     pid_t pid;
     pid = forkAndSpecializeCommon(args);

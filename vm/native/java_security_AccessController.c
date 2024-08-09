@@ -29,7 +29,7 @@
  * privileged frame we see.
  */
 static void Dalvik_java_security_AccessController_getStackDomains(
-    const u4* args, JValue* pResult)
+    const u8* args, JValue* pResult)
 {
     UNUSED_PARAMETER(args);
 

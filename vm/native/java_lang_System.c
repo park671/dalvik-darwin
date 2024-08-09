@@ -28,7 +28,7 @@
  * The description of this function is long, and describes a multitude
  * of checks and exceptions.
  */
-static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_System_arraycopy(const u8* args, JValue* pResult)
 {
     void* (*copyFunc)(void *dest, const void *src, size_t n);
     ArrayObject* srcArray;
@@ -206,7 +206,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
  * Current time, in miliseconds.  This doesn't need to be internal to the
  * VM, but we're already handling java.lang.System here.
  */
-static void Dalvik_java_lang_System_currentTimeMillis(const u4* args,
+static void Dalvik_java_lang_System_currentTimeMillis(const u8* args,
     JValue* pResult)
 {
     struct timeval tv;
@@ -226,7 +226,7 @@ static void Dalvik_java_lang_System_currentTimeMillis(const u4* args,
  * need to be internal to the VM, but we're already handling
  * java.lang.System here.
  */
-static void Dalvik_java_lang_System_nanoTime(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_System_nanoTime(const u8* args, JValue* pResult)
 {
     UNUSED_PARAMETER(args);
 
@@ -241,7 +241,7 @@ static void Dalvik_java_lang_System_nanoTime(const u4* args, JValue* pResult)
  * method would return for "x", even if "x"s class
  * overrides hashCode().
  */
-static void Dalvik_java_lang_System_identityHashCode(const u4* args,
+static void Dalvik_java_lang_System_identityHashCode(const u8* args,
     JValue* pResult)
 {
     Object* thisPtr = (Object*) args[0];
@@ -251,7 +251,7 @@ static void Dalvik_java_lang_System_identityHashCode(const u4* args,
 /*
  * public static String mapLibraryName(String libname)
  */
-static void Dalvik_java_lang_System_mapLibraryName(const u4* args,
+static void Dalvik_java_lang_System_mapLibraryName(const u8* args,
     JValue* pResult)
 {
     StringObject* nameObj = (StringObject*) args[0];
