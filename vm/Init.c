@@ -573,6 +573,7 @@ static int dvmProcessOptions(int argc, const char *const argv[],
             }
             free(gDvm.classPathStr); /* in case we have compiled-in default */
             gDvm.classPathStr = strdup(argv[++i]);
+            fprintf(stdout, "[+] receive classPathStr=%s\n", gDvm.classPathStr);
         } else if (strncmp(argv[i], "-Xbootclasspath:",
                            sizeof("-Xbootclasspath:") - 1) == 0) {
             /* set bootclasspath */
@@ -689,7 +690,7 @@ static int dvmProcessOptions(int argc, const char *const argv[],
             /* (useful if we don't want thread but system still signals us) */
             gDvm.noQuitHandler = true;
         } else if (strcmp(argv[i], "-Xzygote") == 0) {
-            gDvm.zygote = true;
+            gDvm.zygote = false;
         } else if (strncmp(argv[i], "-Xdexopt:", 9) == 0) {
             if (strcmp(argv[i] + 9, "none") == 0)
                 gDvm.dexOptMode = OPTIMIZE_MODE_NONE;
@@ -875,7 +876,7 @@ static void blockSignals() {
     }
 }
 
-const char *DEFAULT_BOOT_CLASSPATH = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin_dex_v2.jar";
+const char *DEFAULT_BOOT_CLASSPATH = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin_dex_v5.jar";
 /*
  * VM initialization.  Pass in any options provided on the command line.
  * Do not pass in the class name or the options for the class.
@@ -903,7 +904,8 @@ int dvmStartup(int argc, const char *const argv[], bool ignoreUnrecognized,
      */
     cc = dvmProcessOptions(argc, argv, ignoreUnrecognized);
     gDvm.bootClassPathStr = DEFAULT_BOOT_CLASSPATH;
-    LOGD("[+] bootclasspath:%s\n", DEFAULT_BOOT_CLASSPATH);
+    LOGD("[+] bootclasspath:%s\n", gDvm.bootClassPathStr);
+    LOGD("[+] classpath:%s\n", gDvm.classPathStr);
     if (cc != 0) {
         if (cc < 0) {
             dvmFprintf(stderr, "\n");

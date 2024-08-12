@@ -538,7 +538,7 @@ static bool prepareCpe(ClassPathEntry *cpe, bool isBootstrap) {
  * optimizing a DEX file we allow it.
  */
 static ClassPathEntry *processClassPath(const char *pathStr, bool isBootstrap) {
-    LOGD("[+] processClassPath()\n");
+    LOGD("[+] processClassPath(), path=%s, isBoot=%d\n", pathStr, isBootstrap);
     ClassPathEntry *cpe = NULL;
     char *mangle;
     char *cp;

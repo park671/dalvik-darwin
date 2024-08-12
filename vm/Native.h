@@ -50,7 +50,7 @@ void dvmNativeShutdown(void);
  * Convert argc/argv into a function call.  This is platform-specific.
  */
 void dvmPlatformInvoke(void* pEnv, ClassObject* clazz, int argInfo, int argc,
-    const u4* argv, const char* signature, void* func, JValue* pResult);
+    const u8* argv, const char* signature, void* func, JValue* pResult);
 
 /*
  * Generate hints to speed native calls.  This is platform specific.

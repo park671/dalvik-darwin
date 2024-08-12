@@ -58,7 +58,7 @@ static ffi_type* getFfiType(char sigType)
  * every call.
  */
 void dvmPlatformInvoke(void* pEnv, ClassObject* clazz, int argInfo, int argc,
-    const u4* argv, const char* shorty, void* func, JValue* pReturn)
+    const u8* argv, const char* shorty, void* func, JValue* pReturn)
 {
     const int kMaxArgs = argc+2;    /* +1 for env, maybe +1 for clazz */
     ffi_cif cif;
@@ -90,8 +90,8 @@ void dvmPlatformInvoke(void* pEnv, ClassObject* clazz, int argInfo, int argc,
     while ((sigByte = *++shorty) != '\0') {
         types[dstArg] = getFfiType(sigByte);
         values[dstArg++] = (void*) argv++;
-        if (sigByte == 'D' || sigByte == 'J')
-            argv++;
+//        if (sigByte == 'D' || sigByte == 'J')
+//            argv++;
     }
 
     /*

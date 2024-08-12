@@ -436,9 +436,7 @@ void dvmCallMethodV(Thread *self, const Method *method, Object *obj,
 
     /* put "this" pointer into in0 if appropriate */
     if (!dvmIsStaticMethod(method)) {
-#ifdef WITH_EXTRA_OBJECT_VALIDATION
         assert(obj != NULL && dvmIsValidObject(obj));
-#endif
         *ins++ = (u8) obj;
         verifyCount++;
     } else {
@@ -462,7 +460,6 @@ void dvmCallMethodV(Thread *self, const Method *method, Object *obj,
                 verifyCount++;
                 break;
             }
-#ifdef WITH_EXTRA_OBJECT_VALIDATION
             case 'L': {     /* 'shorty' descr uses L for all refs, incl array */
                 Object *argObj = (Object *) va_arg(args, u8);
                 assert(obj == NULL || dvmIsValidObject(obj));
@@ -470,7 +467,6 @@ void dvmCallMethodV(Thread *self, const Method *method, Object *obj,
                 verifyCount++;
                 break;
             }
-#endif
             default: {
                 *ins++ = va_arg(args, u4);
                 verifyCount++;
@@ -544,7 +540,7 @@ void dvmCallMethodA(Thread *self, const Method *method, Object *obj,
             case 'D':
             case 'J': {
                 memcpy(ins, &args->j, 8);   /* EABI prevents direct store */
-                ins += 2;
+                ins += 1;
                 verifyCount += 2;
                 args++;
                 break;

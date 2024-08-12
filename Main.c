@@ -28,8 +28,7 @@
 /*
  * We want failed write() calls to just return with an error.
  */
-static void blockSigpipe()
-{
+static void blockSigpipe() {
     sigset_t mask;
 
     sigemptyset(&mask);
@@ -41,8 +40,7 @@ static void blockSigpipe()
 /*
  * Create a String[] and populate it with the contents of argv.
  */
-static jobjectArray createStringArray(JNIEnv* env, char* const argv[], int argc)
-{
+static jobjectArray createStringArray(JNIEnv *env, char *const argv[], int argc) {
     jclass stringClass = NULL;
     jobjectArray strArray = NULL;
     jobjectArray result = NULL;
@@ -78,7 +76,7 @@ static jobjectArray createStringArray(JNIEnv* env, char* const argv[], int argc)
     result = strArray;
     strArray = NULL;
 
-bail:
+    bail:
     (*env)->DeleteLocalRef(env, stringClass);
     (*env)->DeleteLocalRef(env, strArray);
     return result;
@@ -89,8 +87,7 @@ bail:
  *
  * Returns JNI_TRUE on success, JNI_FALSE on failure.
  */
-static int methodIsPublic(JNIEnv* env, jclass clazz, jmethodID methodId)
-{
+static int methodIsPublic(JNIEnv *env, jclass clazz, jmethodID methodId) {
     static const int PUBLIC = 0x0001;   // java.lang.reflect.Modifiers.PUBLIC
     jobject refMethod = NULL;
     jclass methodClass = NULL;
@@ -114,7 +111,7 @@ static int methodIsPublic(JNIEnv* env, jclass clazz, jmethodID methodId)
         goto bail;
     }
     getModifiersId = (*env)->GetMethodID(env, methodClass,
-                        "getModifiers", "()I");
+                                         "getModifiers", "()I");
     if (methodClass == NULL) {
         fprintf(stderr, "Dalvik VM unable to find reflect.Method.getModifiers\n");
         goto bail;
@@ -128,7 +125,7 @@ static int methodIsPublic(JNIEnv* env, jclass clazz, jmethodID methodId)
 
     result = JNI_TRUE;
 
-bail:
+    bail:
     (*env)->DeleteLocalRef(env, refMethod);
     (*env)->DeleteLocalRef(env, methodClass);
     return result;
@@ -138,18 +135,22 @@ bail:
  * Parse arguments.  Most of it just gets passed through to the VM.  The
  * JNI spec defines a handful of standard arguments.
  */
-int main(int argc, char* const argv[])
-{
+int main(int argc, char *const argv[]) {
     fprintf(stdout, "[+] dalvik vm on android 1.6\n");
     fprintf(stdout, "[+] rebuild on darwin by park.yu\n");
+    fprintf(stdout, "[-] argc=%d\n", argc);
+    for (int i = 0; i < argc; i++) {
+        //com.dexvm.test
+        fprintf(stdout, "[-] argv=%s\n", argv[i]);
+    }
     assert(sizeof(char *) == sizeof(u_int64_t));
     assert(sizeof(uintptr_t) == sizeof(u_int64_t));
     //ensure 64-bit ptr
-    JavaVM* vm = NULL;
-    JNIEnv* env = NULL;
+    JavaVM *vm = NULL;
+    JNIEnv *env = NULL;
     JavaVMInitArgs initArgs;
-    JavaVMOption* options = NULL;
-    char* slashClass = NULL;
+    JavaVMOption *options = NULL;
+    char *slashClass = NULL;
     int optionCount, curOpt, i, argIdx;
     int needExtra = JNI_FALSE;
     int result = 1;
@@ -169,7 +170,7 @@ int main(int argc, char* const argv[])
      */
     optionCount = argc;
 
-    options = (JavaVMOption*) malloc(sizeof(JavaVMOption) * optionCount);
+    options = (JavaVMOption *) malloc(sizeof(JavaVMOption) * optionCount);
     memset(options, 0, sizeof(JavaVMOption) * optionCount);
 
     /*
@@ -225,8 +226,8 @@ int main(int argc, char* const argv[])
      * a usage statement.
      */
     if (argIdx == argc) {
-        fprintf(stderr, "Dalvik VM requires a class name\n");
-        goto bail;
+        fprintf(stdout, "[-] no class entry was provided, use hello.dex.\n");
+
     }
 
     /*
@@ -234,7 +235,7 @@ int main(int argc, char* const argv[])
      * Create an array and populate it.  Note argv[0] is not included.
      */
     jobjectArray strArray;
-    strArray = createStringArray(env, &argv[argIdx+1], argc-argIdx-1);
+    strArray = createStringArray(env, &argv[argIdx + 1], argc - argIdx - 1);
     if (strArray == NULL)
         goto bail;
 
@@ -243,7 +244,7 @@ int main(int argc, char* const argv[])
      */
     jclass startClass;
     jmethodID startMeth;
-    char* cp;
+    char *cp;
 
     /* convert "com.android.Blah" to "com/android/Blah" */
     slashClass = strdup(argv[argIdx]);
@@ -258,10 +259,10 @@ int main(int argc, char* const argv[])
     }
 
     startMeth = (*env)->GetStaticMethodID(env, startClass,
-                    "main", "([Ljava/lang/String;)V");
+                                          "main", "([Ljava/lang/String;)V");
     if (startMeth == NULL) {
         fprintf(stderr, "Dalvik VM unable to find static main(String[]) in '%s'\n",
-            slashClass);
+                slashClass);
         goto bail;
     }
 
@@ -280,7 +281,7 @@ int main(int argc, char* const argv[])
     if (!(*env)->ExceptionCheck(env))
         result = 0;
 
-bail:
+    bail:
     /*printf("Shutting down Dalvik VM\n");*/
     if (vm != NULL) {
         /*
@@ -298,7 +299,7 @@ bail:
     }
 
     for (i = 0; i < optionCount; i++)
-        free((char*) options[i].optionString);
+        free((char *) options[i].optionString);
     free(options);
     free(slashClass);
     /*printf("--- VM is down, process exiting\n");*/
