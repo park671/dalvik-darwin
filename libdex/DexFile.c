@@ -31,13 +31,35 @@
 #include <fcntl.h>
 #include <errno.h>
 
-/*
- * Verifying checksums is good, but it slows things down and causes us to
- * touch every page.  In the "optimized" world, it doesn't work at all,
- * because we rewrite the contents.
- */
-static const bool kVerifyChecksum = false;
-static const bool kVerifySignature = false;
+const uint8_t kDexMagic[] = {'d', 'e', 'x', '\n'};
+const uint8_t kDexMagicVersions[kNumDexVersions][kDexVersionLen] = {
+        {'0', '3', '5', '\0'},
+        // Dex version 036 skipped because of an old dalvik bug on some versions of android where
+        // dex files with that version number would erroneously be accepted and run.
+        {'0', '3', '7', '\0'},
+        // Dex version 038: Android "O" and beyond.
+        {'0', '3', '8', '\0'},
+        // Dex version 039: Android "P" and beyond.
+        {'0', '3', '9', '\0'},
+        // Dex version 040: Android "Q" and beyond (aka Android 10).
+        {'0', '4', '0', '\0'},
+        // Dex version 041: Android "V" and beyond (aka Android 15).
+        {'0', '4', '1', '\0'},
+};
+
+bool isMagicValid(const uint8_t *magic) {
+    return (memcmp(magic, kDexMagic, sizeof(kDexMagic)) == 0);
+}
+
+bool isMagicVersionValid(const uint8_t *magic) {
+    const uint8_t *version = &magic[sizeof(kDexMagic)];
+    for (uint32_t i = 0; i < kNumDexVersions; i++) {
+        if (memcmp(version, kDexMagicVersions[i], kDexVersionLen) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 
 /* Compare two '\0'-terminated modified UTF-8 strings, using Unicode
@@ -68,10 +90,10 @@ int dexUtf8Cmp(const char *s1, const char *s2) {
 
 /* for dexIsValidMemberNameUtf8(), a bit vector indicating valid low ascii */
 u4 DEX_MEMBER_VALID_LOW_ASCII[4] = {
-    0x00000000, // 00..1f low control characters; nothing valid
-    0x03ff2010, // 20..3f digits and symbols; valid: '0'..'9', '$', '-'
-    0x87fffffe, // 40..5f uppercase etc.; valid: 'A'..'Z', '_'
-    0x07fffffe // 60..7f lowercase etc.; valid: 'a'..'z'
+        0x00000000, // 00..1f low control characters; nothing valid
+        0x03ff2010, // 20..3f digits and symbols; valid: '0'..'9', '$', '-'
+        0x87fffffe, // 40..5f uppercase etc.; valid: 'A'..'Z', '_'
+        0x07fffffe // 60..7f lowercase etc.; valid: 'a'..'z'
 };
 
 /* Helper for dexIsValidMemberNameUtf8(); do not call directly. */
@@ -388,7 +410,6 @@ u4 dexRoundUpPower2(u4 val) {
     val |= val >> 8;
     val |= val >> 16;
     val++;
-
     return val;
 }
 
@@ -720,15 +741,14 @@ DexFile *dexFileParse(const u1 *data, size_t length, int flags) {
     pHeader = pDexFile->pHeader;
 
     magic = pHeader->magic;
-    if (memcmp(magic, DEX_MAGIC, 4) != 0) {
+    if (!isMagicValid(magic)) {
         /* not expected */
         LOGE("bad magic number (0x%02x %02x %02x %02x)\n",
              magic[0], magic[1], magic[2], magic[3]);
         goto bail;
     }
-    if (memcmp(magic + 4, DEX_MAGIC_VERS, 4) != 0) {
-        LOGE("support version (0x%02x %02x %02x %02x)\nbad dex version (0x%02x %02x %02x %02x)\n",
-             DEX_MAGIC_VERS[0], DEX_MAGIC_VERS[1], DEX_MAGIC_VERS[2], DEX_MAGIC_VERS[3],
+    if (!isMagicVersionValid(magic)) {
+        LOGE("support version (35 - 41)\nbad dex version (0x%02x %02x %02x %02x)\n",
              magic[4], magic[5], magic[6], magic[7]);
         goto bail;
     }
@@ -750,32 +770,6 @@ DexFile *dexFileParse(const u1 *data, size_t length, int flags) {
         }
     }
 
-    /*
-     * Verify the SHA-1 digest.  (Normally we don't want to do this --
-     * the digest is used to uniquely identify a DEX file, and can't be
-     * computed post-optimization.)
-     *
-     * The digest will be invalid after byte swapping and DEX optimization.
-     */
-    if (kVerifySignature) {
-        unsigned char sha1Digest[kSHA1DigestLen];
-        const int nonSum = sizeof(pHeader->magic) + sizeof(pHeader->checksum) +
-                           kSHA1DigestLen;
-
-        dexComputeSHA1Digest(data + nonSum, length - nonSum, sha1Digest);
-        if (memcmp(sha1Digest, pHeader->signature, kSHA1DigestLen) != 0) {
-            char tmpBuf1[kSHA1DigestOutputLen];
-            char tmpBuf2[kSHA1DigestOutputLen];
-            LOGE("ERROR: bad SHA1 digest (%s vs %s)\n",
-                 dexSHA1DigestToStr(sha1Digest, tmpBuf1),
-                 dexSHA1DigestToStr(pHeader->signature, tmpBuf2));
-            if (!(flags & kDexParseContinueOnError))
-                goto bail;
-        } else {
-            LOGV("+++ sha1 digest verified\n");
-        }
-    }
-
     if (pHeader->fileSize != length) {
         LOGE("ERROR: stored file size (%d) != expected (%d)\n",
              (int) pHeader->fileSize, (int) length);
@@ -793,7 +787,7 @@ DexFile *dexFileParse(const u1 *data, size_t length, int flags) {
      */
     result = 0;
 
-bail:
+    bail:
     if (result != 0 && pDexFile != NULL) {
         dexFileFree(pDexFile);
         pDexFile = NULL;
@@ -970,20 +964,20 @@ static void emitLocalCbIfLive(void *cnxt, int reg, u4 endAddress,
                 localInReg[reg].name,
                 localInReg[reg].descriptor,
                 localInReg[reg].signature == NULL
-                    ? ""
-                    : localInReg[reg].signature);
+                ? ""
+                : localInReg[reg].signature);
     }
 }
 
 // TODO optimize localCb == NULL case
 void dexDecodeDebugInfo(
-    const DexFile *pDexFile,
-    const DexCode *pCode,
-    const char *classDescriptor,
-    u4 protoIdx,
-    u4 accessFlags,
-    DexDebugNewPositionCb posCb, DexDebugNewLocalCb localCb,
-    void *cnxt) {
+        const DexFile *pDexFile,
+        const DexCode *pCode,
+        const char *classDescriptor,
+        u4 protoIdx,
+        u4 accessFlags,
+        DexDebugNewPositionCb posCb, DexDebugNewLocalCb localCb,
+        void *cnxt) {
     const u1 *stream = dexGetDebugInfoStream(pDexFile, pCode);
     u4 line;
     u4 parametersSize;
@@ -1075,7 +1069,7 @@ void dexDecodeDebugInfo(
                 reg = readUnsignedLeb128(&stream);
                 if (reg > pCode->registersSize) goto invalid_stream;
 
-            // Emit what was previously there, if anything
+                // Emit what was previously there, if anything
                 emitLocalCbIfLive(cnxt, reg, address,
                                   localInReg, localCb);
 
@@ -1108,10 +1102,10 @@ void dexDecodeDebugInfo(
                     goto invalid_stream;
                 }
 
-            /*
-             * If the register is live, the "restart" is superfluous,
-             * and we don't want to mess with the existing start address.
-             */
+                /*
+                 * If the register is live, the "restart" is superfluous,
+                 * and we don't want to mess with the existing start address.
+                 */
                 if (!localInReg[reg].live) {
                     localInReg[reg].startAddress = address;
                     localInReg[reg].live = true;
@@ -1143,7 +1137,8 @@ void dexDecodeDebugInfo(
         }
     }
 
-end: {
+    end:
+    {
         int reg;
         for (reg = 0; reg < pCode->registersSize; reg++) {
             emitLocalCbIfLive(cnxt, reg, insnsSize, localInReg, localCb);
@@ -1151,7 +1146,7 @@ end: {
     }
     return;
 
-invalid_stream:
+    invalid_stream:
     IF_LOGE() {
         char *methodDescriptor = dexProtoCopyMethodDescriptor(&proto);
         LOGE("Invalid debug info stream. class %s; proto %s",

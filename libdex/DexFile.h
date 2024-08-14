@@ -34,10 +34,15 @@
 #include "SysUtil.h"
 #include "../Common.h"
 
-/* DEX file magic number */
-#define DEX_MAGIC       "dex\n"
-/* version, encoded in 4 bytes of ASCII */
-#define DEX_MAGIC_VERS  "035\0"
+static const size_t kNumDexVersions = 6;
+static const size_t kDexVersionLen = 4;
+
+extern const uint8_t kDexMagic[];
+extern const uint8_t kDexMagicVersions[kNumDexVersions][kDexVersionLen];
+
+bool isMagicValid(const uint8_t *magic);
+
+bool isMagicVersionValid(const uint8_t *magic);
 
 /* same, but for optimized DEX header */
 #define DEX_OPT_MAGIC   "dey\n"
