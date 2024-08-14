@@ -42,11 +42,7 @@
  * and the events should be cleaning up after themselves.
  */
 void dvmInitBreakpoints(void) {
-#ifdef WITH_DEBUGGER
-    memset(gDvm.debugBreakAddr, 0, sizeof(gDvm.debugBreakAddr));
-#else
     assert(false);
-#endif
 }
 
 /*
@@ -64,30 +60,7 @@ void dvmInitBreakpoints(void) {
  * "addr" is the absolute address of the breakpoint bytecode.
  */
 void dvmAddBreakAddr(Method *method, int instrOffset) {
-#ifdef WITH_DEBUGGER
-    const u2* addr = method->insns + instrOffset;
-    const u2** ptr = gDvm.debugBreakAddr;
-    int i;
-
-    LOGV("BKP: add %p %s.%s (%s:%d)\n",
-        addr, method->clazz->descriptor, method->name,
-        dvmGetMethodSourceFile(method), dvmLineNumFromPC(method, instrOffset));
-
-    method->debugBreakpointCount++;
-    for (i = 0; i < MAX_BREAKPOINTS; i++, ptr++) {
-        if (*ptr == NULL) {
-            *ptr = addr;
-            break;
-        }
-    }
-    if (i == MAX_BREAKPOINTS) {
-        /* no room; size is too small or we're not cleaning up properly */
-        LOGE("ERROR: max breakpoints exceeded\n");
-        assert(false);
-    }
-#else
     assert(false);
-#endif
 }
 
 /*
@@ -101,31 +74,7 @@ void dvmAddBreakAddr(Method *method, int instrOffset) {
  * updating breakpoints at the same time.
  */
 void dvmClearBreakAddr(Method *method, int instrOffset) {
-#ifdef WITH_DEBUGGER
-    const u2* addr = method->insns + instrOffset;
-    const u2** ptr = gDvm.debugBreakAddr;
-    int i;
-
-    LOGV("BKP: clear %p %s.%s (%s:%d)\n",
-        addr, method->clazz->descriptor, method->name,
-        dvmGetMethodSourceFile(method), dvmLineNumFromPC(method, instrOffset));
-
-    method->debugBreakpointCount--;
-    assert(method->debugBreakpointCount >= 0);
-    for (i = 0; i < MAX_BREAKPOINTS; i++, ptr++) {
-        if (*ptr == addr) {
-            *ptr = NULL;
-            break;
-        }
-    }
-    if (i == MAX_BREAKPOINTS) {
-        /* didn't find it */
-        LOGE("ERROR: breakpoint on %p not found\n", addr);
-        assert(false);
-    }
-#else
     assert(false);
-#endif
 }
 
 /*
@@ -138,119 +87,15 @@ void dvmClearBreakAddr(Method *method, int instrOffset) {
  * This is only called from the JDWP thread.
  */
 bool dvmAddSingleStep(Thread *thread, int size, int depth) {
-#ifdef WITH_DEBUGGER
-    StepControl* pCtrl = &gDvm.stepControl;
-
-    if (pCtrl->active && thread != pCtrl->thread) {
-        LOGW("WARNING: single-step active for %p; adding %p\n",
-            pCtrl->thread, thread);
-
-        /*
-         * Keep going, overwriting previous.  This can happen if you
-         * suspend a thread in Object.wait, hit the single-step key, then
-         * switch to another thread and do the same thing again.
-         * The first thread's step is still pending.
-         *
-         * TODO: consider making single-step per-thread.  Adds to the
-         * overhead, but could be useful in rare situations.
-         */
-    }
-
-    pCtrl->size = size;
-    pCtrl->depth = depth;
-    pCtrl->thread = thread;
-
-    /*
-     * We may be stepping into or over method calls, or running until we
-     * return from the current method.  To make this work we need to track
-     * the current line, current method, and current stack depth.  We need
-     * to be checking these after most instructions, notably those that
-     * call methods, return from methods, or are on a different line from the
-     * previous instruction.
-     *
-     * We have to start with a snapshot of the current state.  If we're in
-     * an interpreted method, everything we need is in the current frame.  If
-     * we're in a native method, possibly with some extra JNI frames pushed
-     * on by PushLocalFrame, we want to use the topmost native method.
-     */
-    const StackSaveArea* saveArea;
-    void* fp;
-    void* prevFp = NULL;
-    
-    for (fp = thread->curFrame; fp != NULL; fp = saveArea->prevFrame) {
-        const Method* method;
-
-        saveArea = SAVEAREA_FROM_FP(fp);
-        method = saveArea->method;
-
-        if (!dvmIsBreakFrame(fp) && !dvmIsNativeMethod(method))
-            break;
-        prevFp = fp;
-    }
-    if (fp == NULL) {
-        LOGW("Unexpected: step req in native-only threadid=%d\n",
-            thread->threadId);
-        return false;
-    }
-    if (prevFp != NULL) {
-        /*
-         * First interpreted frame wasn't the one at the bottom.  Break
-         * frames are only inserted when calling from native->interp, so we
-         * don't need to worry about one being here.
-         */
-        LOGV("##### init step while in native method\n");
-        fp = prevFp;
-        assert(!dvmIsBreakFrame(fp));
-        assert(dvmIsNativeMethod(SAVEAREA_FROM_FP(fp)->method));
-        saveArea = SAVEAREA_FROM_FP(fp);
-    }
-
-    /*
-     * Pull the goodies out.  "xtra.currentPc" should be accurate since
-     * we update it on every instruction while the debugger is connected.
-     */
-    pCtrl->method = saveArea->method;
-    // Clear out any old address set
-    if (pCtrl->pAddressSet != NULL) {
-        // (discard const)
-        free((void *)pCtrl->pAddressSet);
-        pCtrl->pAddressSet = NULL;
-    }
-    if (dvmIsNativeMethod(pCtrl->method)) {
-        pCtrl->line = -1;
-    } else {
-        pCtrl->line = dvmLineNumFromPC(saveArea->method,
-                        saveArea->xtra.currentPc - saveArea->method->insns);
-        pCtrl->pAddressSet 
-                = dvmAddressSetForLine(saveArea->method, pCtrl->line);
-    }
-    pCtrl->frameDepth = dvmComputeVagueFrameDepth(thread, thread->curFrame);
-    pCtrl->active = true;
-
-    LOGV("##### step init: thread=%p meth=%p '%s' line=%d frameDepth=%d depth=%s size=%s\n",
-        pCtrl->thread, pCtrl->method, pCtrl->method->name,
-        pCtrl->line, pCtrl->frameDepth,
-        dvmJdwpStepDepthStr(pCtrl->depth),
-        dvmJdwpStepSizeStr(pCtrl->size));
-
-    return true;
-#else
     assert(false);
     return false;
-#endif
 }
 
 /*
  * Disable a single step event.
  */
 void dvmClearSingleStep(Thread *thread) {
-#ifdef WITH_DEBUGGER
-    UNUSED_PARAMETER(thread);
-
-    gDvm.stepControl.active = false;
-#else
     assert(false);
-#endif
 }
 
 
@@ -640,15 +485,6 @@ Method *dvmInterpFindInterfaceMethod(ClassObject *thisClass, u4 methodIdx,
 void dvmInterpret(Thread *self, const Method *method, JValue *pResult) {
     InterpState interpState;
     bool change;
-
-#if defined(WITH_TRACKREF_CHECKS)
-    interpState.debugTrackedRefStart =
-        dvmReferenceTableEntries(&self->internalLocalRefTable);
-#endif
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
-    interpState.debugIsMethodEntry = true;
-#endif
-
     /*
      * Initialize working state.
      *

@@ -100,12 +100,6 @@ static void dvmUsage(const char *progName) {
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
-#ifdef WITH_DEBUGGER
-               " debugger"
-#endif
-#ifdef WITH_PROFILER
-               " profiler"
-#endif
 #ifdef WITH_MONITOR_TRACKING
                " monitor_tracking"
 #endif
@@ -1182,11 +1176,6 @@ bool dvmInitAfterZygote(void) {
  */
 static bool dvmInitJDWP(void) {
     assert(!gDvm.zygote);
-
-#ifndef WITH_DEBUGGER
-    LOGI("Debugger support not compiled into VM\n");
-    return false;
-#endif
 
     /*
      * Init JDWP if the debugger is enabled.  This may connect out to a

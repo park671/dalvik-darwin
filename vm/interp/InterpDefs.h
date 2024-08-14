@@ -65,12 +65,6 @@ typedef struct InterpState {
      */
     const u1*       interpStackEnd;
     volatile int*   pSelfSuspendCount;
-#if defined(WITH_DEBUGGER)
-    volatile bool*  pDebuggerActive;
-#endif
-#if defined(WITH_PROFILER)
-    volatile int*   pActiveProfilers;
-#endif
     /* ----------------------------------------------------------------------
      */
 
@@ -79,14 +73,6 @@ typedef struct InterpState {
      */
     InterpEntry entryPoint;             // what to do when we start
     int         nextMode;               // INTERP_STD or INTERP_DBG
-
-
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
-    bool        debugIsMethodEntry;     // used for method entry event triggers
-#endif
-#if defined(WITH_TRACKREF_CHECKS)
-    int         debugTrackedRefStart;   // tracked refs from prior invocations
-#endif
 
 } InterpState;
 
@@ -137,11 +123,7 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
  */
 static inline bool dvmDebuggerOrProfilerActive(void)
 {
-    return gDvm.debuggerActive
-#if defined(WITH_PROFILER)
-        || gDvm.activeProfilers != 0
-#endif
-        ;
+    return gDvm.debuggerActive;
 }
 
 #endif /*_DALVIK_INTERP_DEFS*/

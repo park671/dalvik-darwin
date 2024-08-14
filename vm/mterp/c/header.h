@@ -308,13 +308,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  *
  * If we're building without debug and profiling support, we never switch.
  */
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
-#else
 # define NEED_INTERP_SWITCH(_current) (false)
-#endif
 
 /*
  * Look up an interface on a class using the cache.

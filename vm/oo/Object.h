@@ -484,13 +484,6 @@ struct Method {
      * linear alloc area if not.
      */
     const RegisterMap* registerMap;
-
-#ifdef WITH_PROFILER
-    bool            inProfile;
-#endif
-#ifdef WITH_DEBUGGER
-    short           debugBreakpointCount;
-#endif
 };
 
 /*
@@ -529,6 +522,7 @@ struct InstField {
      * the same as the object pointer (bug!), and byteOffset==4 is 4
      * bytes farther.
      */
+    //todo: consider use long long?
     int             byteOffset;
 };
 
