@@ -1459,7 +1459,7 @@ static int win32munmap(void* ptr, size_t size) {
 #endif /* HAVE_MORECORE */
 
 /* mstate bit set if continguous morecore disabled or failed */
-#define USE_NONCONTIGUOUS_BIT (4U)
+#define USE_NONCONTIGUOUS_BIT (8U)
 
 /* segment bit set in create_mspace_with_base */
 #define EXTERN_BIT            (8U)

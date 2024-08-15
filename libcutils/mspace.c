@@ -58,6 +58,7 @@ static void *contiguous_mspace_morecore(mstate0 m, ssize_t nb);
 #define MSPACES 1
 #define ONLY_MSPACES 1
 #include "dlmalloc.c"
+#include "Common.h"
 
 #ifndef PAGESIZE
 #define PAGESIZE  mparams.page_size
@@ -96,7 +97,7 @@ struct mspace_contig_state {
 static void *contiguous_mspace_morecore(mstate m, ssize_t nb) {
     struct mspace_contig_state *cs;
     char *oldbrk;
-    const unsigned int pagesize = PAGESIZE;
+    const u8 pagesize = PAGESIZE;
 
     cs = (struct mspace_contig_state *) ((u_int64_t) m & ~(pagesize - 1));
     assert(cs->magic == CONTIG_STATE_MAGIC);
@@ -141,7 +142,7 @@ mspace create_contiguous_mspace_with_name(size_t starting_capacity,
     struct mspace_contig_state *cs;
     char buf[ASHMEM_NAME_LEN] = "mspace";
     void *base;
-    unsigned int pagesize;
+    u8 pagesize;
     mstate m;
 
     if (starting_capacity > max_capacity) {
@@ -151,6 +152,7 @@ mspace create_contiguous_mspace_with_name(size_t starting_capacity,
 
     init_mparams();
     pagesize = PAGESIZE;
+    printf("[+] pagesize=%u\n", pagesize);
 
     /* Create the anonymous memory that will back the mspace.
      * This reserves all of the virtual address space we could
@@ -245,7 +247,7 @@ size_t destroy_contiguous_mspace(mspace msp) {
     if (ok_magic(ms)) {
         struct mspace_contig_state *cs;
         size_t length;
-        const unsigned int pagesize = PAGESIZE;
+        u8 pagesize = PAGESIZE;
 
         cs = (struct mspace_contig_state *) ((u_int64_t) ms & ~(pagesize - 1));
         assert(cs->magic == CONTIG_STATE_MAGIC);
