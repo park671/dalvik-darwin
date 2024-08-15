@@ -33,6 +33,7 @@
 #include "analysis/ReduceConstants.h"
 #include "DvmDex.h"
 #include "RawDexFile.h"
+#include "RamOdexFile.h"
 #include "Sync.h"
 #include "oo/Object.h"
 #include "Native.h"

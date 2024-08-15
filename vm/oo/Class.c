@@ -164,6 +164,8 @@ may not be worth the performance hit.
  */
 #define ZYGOTE_CLASS_CUTOFF 2304
 
+static ClassPathEntry *processClassPathByRamArray(void *baseAddr, const size_t size, bool isBootstrap);
+
 static ClassPathEntry *processClassPath(const char *pathStr, bool isBootstrap);
 
 static void freeCpeArray(ClassPathEntry *cpe);
@@ -348,7 +350,12 @@ bool dvmClassStartup(void) {
      * DEX or Jar files and possibly running them through the optimizer.
      */
     assert(gDvm.bootClassPath == NULL);
-    processClassPath(gDvm.bootClassPathStr, true);
+
+    if (gDvm.useRamBootClass) {
+        processClassPathByRamArray(gDvm.bootClassPathBaseAddr, gDvm.bootClassPathSize, true);
+    } else {
+        processClassPath(gDvm.bootClassPathStr, true);
+    }
 
     if (gDvm.bootClassPath == NULL)
         return false;
@@ -402,6 +409,9 @@ static void dumpClassPath(const ClassPathEntry *cpe) {
             case kCpeJar:
                 kindStr = "jar";
                 break;
+            case kCpeRamOdex:
+                kindStr = "odex(ram)";
+                break;
             case kCpeDex:
                 kindStr = "dex";
                 break;
@@ -414,6 +424,10 @@ static void dumpClassPath(const ClassPathEntry *cpe) {
         if (CALC_CACHE_STATS && cpe->kind == kCpeJar) {
             JarFile *pJarFile = (JarFile *) cpe->ptr;
             DvmDex *pDvmDex = dvmGetJarFileDex(pJarFile);
+            dvmDumpAtomicCacheStats(pDvmDex->pInterfaceCache);
+        } else if (CALC_CACHE_STATS && cpe->kind == kCpeRamOdex) {
+            RamOdexFile *pRamOdexFile = (RamOdexFile *) cpe->ptr;
+            DvmDex *pDvmDex = dvmGetRamOdexFileDex(pRamOdexFile);
             dvmDumpAtomicCacheStats(pDvmDex->pInterfaceCache);
         }
 
@@ -459,6 +473,10 @@ static void freeCpeArray(ClassPathEntry *cpe) {
                 /* free JarFile */
                 dvmJarFileFree((JarFile *) cpe->ptr);
                 break;
+            case kCpeRamOdex:
+                /* free RamOdex */
+                dvmRamOdexFileFree((RamOdexFile *) cpe->ptr);
+                break;
             case kCpeDex:
                 /* free RawDexFile */
                 dvmRawDexFileFree((RawDexFile *) cpe->ptr);
@@ -468,8 +486,10 @@ static void freeCpeArray(ClassPathEntry *cpe) {
                 assert(cpe->ptr == NULL);
                 break;
         }
-
-        free(cpe->fileName);
+        if(cpe->kind != kCpeRamOdex) {
+            // ram odex do not have file, so can not be free.
+            free(cpe->fileName);
+        }
         cpe++;
     }
 
@@ -482,10 +502,25 @@ static void freeCpeArray(ClassPathEntry *cpe) {
  * everything other than directories we need to open it up and see
  * what's inside.
  */
-static bool prepareCpe(ClassPathEntry *cpe, bool isBootstrap) {
+static bool prepareCpe(ClassPathEntry *cpe, bool isBootstrap, bool isRamFile) {
     LOGD("[+] prepareCpe\n");
     JarFile *pJarFile = NULL;
     RawDexFile *pRawDexFile = NULL;
+    RamOdexFile *ramOdexFile = NULL;
+
+    if (isRamFile) {
+        int result = dvmRamOdexFileOpen(cpe->baseAddr, cpe->size, NULL, &ramOdexFile, isBootstrap);
+        LOGD("[+] this log is used to fix wired clang compilation bug\n");
+        if (result == 0) {
+            cpe->kind = kCpeRamOdex;
+            cpe->ptr = ramOdexFile;
+            LOGD("[+] prepareCpe() dvmRamOdexFileOpen success\n");
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     struct stat sb;
     int cc;
 
@@ -523,6 +558,73 @@ static bool prepareCpe(ClassPathEntry *cpe, bool isBootstrap) {
     }
 
     return false;
+}
+
+/*
+ * Convert a colon-separated list of directories, Zip files, and DEX files
+ * into an array of ClassPathEntry structs.
+ *
+ * If we're unable to load a bootstrap class path entry, we fail.  This
+ * is necessary to preserve the dependencies implied by optimized DEX files
+ * (e.g. if the same class appears in multiple places).
+ *
+ * During normal startup we fail if there are no entries, because we won't
+ * get very far without the basic language support classes, but if we're
+ * optimizing a DEX file we allow it.
+ */
+static ClassPathEntry *processClassPathByRamArray(void *baseAddr, const size_t size, bool isBootstrap) {
+    LOGD("[+] processClassPathByRamArray(), baseAddr=%p(size=%zu), isBoot=%d\n", baseAddr, size, isBootstrap);
+    ClassPathEntry *cpe = NULL;
+
+    assert(baseAddr != NULL);
+    /*
+     * Allocate storage.  We over-alloc by one so we can set an "end" marker.
+     */
+    cpe = (ClassPathEntry *) calloc(2, sizeof(ClassPathEntry));
+
+    /*
+     * Set the global pointer so the DEX file dependency stuff can find it.
+     */
+    gDvm.bootClassPath = cpe;
+
+    ClassPathEntry tmp;
+    tmp.kind = kCpeUnknown;
+    tmp.baseAddr = baseAddr;
+    tmp.size = size;
+    tmp.ptr = NULL;
+    int result = prepareCpe(&tmp, isBootstrap, true);
+    LOGD("[+] prepareCpe() result is %d\n", result);
+
+    if (result == 0) {
+        LOGD("[-] processClassPathByRamArray(), Failed on '%p' (boot=%d)\n", tmp.baseAddr, isBootstrap);
+        /* drop from list and continue on */
+        free(tmp.fileName);
+
+        if (isBootstrap || gDvm.optimizing) {
+            /* if boot path entry or we're optimizing, this is fatal */
+            free(cpe);
+            cpe = NULL;
+            goto bail;
+        }
+    }
+    /* copy over, pointers and all */
+    if (tmp.fileName[0] != '/')
+        LOGW("Non-absolute bootclasspath entry '%s'\n",
+             tmp.fileName);
+    cpe[0] = tmp;
+
+            LOGVV("  (ram only support 1-1 now)(filled 1 of 1 slots)\n");
+
+    /* put end marker in over-alloc slot */
+    cpe[1].kind = kCpeLastEntry;
+    cpe[1].fileName = NULL;
+    cpe[1].ptr = NULL;
+
+    //dumpClassPath(cpe);
+
+    bail:
+    gDvm.bootClassPath = cpe;
+    return cpe;
 }
 
 /*
@@ -594,7 +696,7 @@ static ClassPathEntry *processClassPath(const char *pathStr, bool isBootstrap) {
             cpe[idx].fileName = NULL;
             cpe[idx].ptr = NULL;
 
-            if (!prepareCpe(&tmp, isBootstrap)) {
+            if (!prepareCpe(&tmp, isBootstrap, false)) {
                 LOGD("Failed on '%s' (boot=%d)\n", tmp.fileName, isBootstrap);
                 /* drop from list and continue on */
                 free(tmp.fileName);
@@ -670,6 +772,21 @@ static DvmDex *searchBootPathForClass(const char *descriptor,
                 DvmDex *pDvmDex;
 
                 pDvmDex = dvmGetJarFileDex(pJarFile);
+                pClassDef = dexFindClass(pDvmDex->pDexFile, descriptor);
+                if (pClassDef != NULL) {
+                    /* found */
+                    pFoundDef = pClassDef;
+                    pFoundFile = pDvmDex;
+                    goto found;
+                }
+            }
+                break;
+            case kCpeRamOdex: {
+                RamOdexFile *pRamOdexFile = (RamOdexFile *) cpe->ptr;
+                const DexClassDef *pClassDef;
+                DvmDex *pDvmDex;
+
+                pDvmDex = dvmGetRamOdexFileDex(pRamOdexFile);
                 pClassDef = dexFindClass(pDvmDex->pDexFile, descriptor);
                 if (pClassDef != NULL) {
                     /* found */
@@ -792,6 +909,10 @@ StringObject *dvmGetBootPathResource(const char *name, int idx) {
             if (dexZipFindEntry(&pJarFile->archive, name) == NULL)
                 goto bail;
             sprintf(urlBuf, "jar:file://%s!/%s", cpe->fileName, name);
+        }
+        case kCpeRamOdex: {
+            LOGV("No resources in odex(ram) files\n");
+            goto bail;
         }
             break;
         case kCpeDex:
@@ -1010,9 +1131,6 @@ ClassObject *dvmLookupClass(const char *descriptor, Object *loader,
 
             LOGVV("threadid=%d: dvmLookupClass searching for '%s' %p\n",
                   dvmThreadSelf()->threadId, descriptor, loader);
-    if (strcmp("Ljava/nio/Buffer;", descriptor) == 0) {
-        LOGD("[-] nio buffer!\n");
-    }
     dvmHashTableLock(gDvm.loadedClasses);
     found = dvmHashTableLookup(gDvm.loadedClasses, hash, &crit,
                                hashcmpClassByCrit, false);
@@ -1363,9 +1481,6 @@ static ClassObject *findClassNoInit(const char *descriptor, Object *loader,
                                     DvmDex *pDvmDex) {
     Thread *self = dvmThreadSelf();
     ClassObject *clazz;
-#ifdef WITH_PROFILER
-    bool profilerNotified = false;
-#endif
 
     if (loader != NULL) {
                 LOGVV("#### findClassNoInit(%s,%p,%p)\n", descriptor, loader,
@@ -1394,15 +1509,6 @@ static ClassObject *findClassNoInit(const char *descriptor, Object *loader,
     clazz = dvmLookupClass(descriptor, loader, true);
     if (clazz == NULL) {
         const DexClassDef *pClassDef;
-
-#ifdef WITH_PROFILER
-        dvmMethodTraceClassPrepBegin();
-        profilerNotified = true;
-#endif
-
-#if LOG_CLASS_LOADING
-        u8 startTime = dvmGetThreadCpuTimeNsec();
-#endif
 
         if (pDvmDex == NULL) {
             assert(loader == NULL);     /* shouldn't be here otherwise */

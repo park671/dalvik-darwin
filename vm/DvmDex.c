@@ -92,6 +92,45 @@ static DvmDex* allocateAuxStructures(DexFile* pDexFile)
 
 }
 
+int dvmDexFileOpenFromArray(void* array, int size, DvmDex** ppDvmDex)
+{
+    DvmDex* pDvmDex;
+    DexFile* pDexFile;
+    MemMapping memMap;
+    int parseFlags = kDexParseDefault;
+    int result = -1;
+
+    if (gDvm.verifyDexChecksum)
+        parseFlags |= kDexParseVerifyChecksum;
+
+    if (sysMapByteArray(array, size, &memMap) != 0) {
+        LOGE("Unable to map file\n");
+        goto bail;
+    }
+
+    pDexFile = dexFileParse(memMap.addr, memMap.length, parseFlags);
+    if (pDexFile == NULL) {
+        LOGE("DEX parse failed\n");
+        sysReleaseShmem(&memMap);
+        goto bail;
+    }
+
+    pDvmDex = allocateAuxStructures(pDexFile);
+    if (pDvmDex == NULL) {
+        dexFileFree(pDexFile);
+        sysReleaseShmem(&memMap);
+        goto bail;
+    }
+
+    /* tuck this into the DexFile so it gets released later */
+    sysCopyMap(&pDvmDex->memMap, &memMap);
+    *ppDvmDex = pDvmDex;
+    result = 0;
+
+    bail:
+    return result;
+}
+
 /*
  * Given an open optimized DEX file, map it into read-only shared memory and
  * parse the contents.

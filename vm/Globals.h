@@ -66,7 +66,12 @@ struct DvmGlobals {
     /*
      * Some options from the command line or environment.
      */
+    bool        useRamBootClass;
     char*       bootClassPathStr;
+
+    void*       bootClassPathBaseAddr;
+    size_t      bootClassPathSize;
+
     char*       classPathStr;
 
     unsigned int    heapSizeStart;

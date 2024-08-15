@@ -56,6 +56,8 @@ int sysLoadFileInShmem(int fd, MemMapping* pMap);
  */
 int sysMapFileInShmem(int fd, MemMapping* pMap);
 
+int sysMapByteArray(void * array, int size, MemMapping* pMap);
+
 /*
  * Like sysMapFileInShmem, but on only part of a file.
  */

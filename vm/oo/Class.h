@@ -41,9 +41,12 @@ typedef struct ClassPathEntry {
         kCpeDir,
         kCpeJar,
         kCpeDex,
+        kCpeRamOdex,
         kCpeLastEntry       /* used as sentinel at end of array */
     }       kind;
     char*   fileName;
+    void*   baseAddr;
+    size_t  size;
     void*   ptr;            /* JarFile* or DexFile* */
 } ClassPathEntry;
 

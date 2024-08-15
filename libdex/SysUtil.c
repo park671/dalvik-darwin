@@ -16,6 +16,7 @@
 /*
  * System utilities.
  */
+#include "AndroidConfig.h"
 #include "DexFile.h"
 #include "SysUtil.h"
 
@@ -26,7 +27,9 @@
 #include "../Common.h"
 
 #ifdef HAVE_POSIX_FILEMAP
+
 #include <sys/mman.h>
+
 #endif
 
 #include <limits.h>
@@ -45,16 +48,15 @@
  * bytes.  The actual segment may be larger because mmap() operates on
  * page boundaries (usually 4K).
  */
-static void* sysCreateAnonShmem(size_t length)
-{
+static void *sysCreateAnonShmem(size_t length) {
 #ifdef HAVE_POSIX_FILEMAP
-    void* ptr;
+    void *ptr;
 
     ptr = mmap(NULL, length, PROT_READ | PROT_WRITE,
-            MAP_SHARED | MAP_ANON, -1, 0);
+               MAP_SHARED | MAP_ANON, -1, 0);
     if (ptr == MAP_FAILED) {
         LOGW("mmap(%d, RW, SHARED|ANON) failed: %s\n", (int) length,
-            strerror(errno));
+             strerror(errno));
         return NULL;
     }
 
@@ -65,8 +67,7 @@ static void* sysCreateAnonShmem(size_t length)
 #endif
 }
 
-static int getFileStartAndLength(int fd, off_t *start_, size_t *length_)
-{
+static int getFileStartAndLength(int fd, off_t *start_, size_t *length_) {
     off_t start, end;
     size_t length;
 
@@ -101,12 +102,11 @@ static int getFileStartAndLength(int fd, off_t *start_, size_t *length_)
  * We need to know the length ahead of time so we can allocate a segment
  * of sufficient size.
  */
-int sysLoadFileInShmem(int fd, MemMapping* pMap)
-{
+int sysLoadFileInShmem(int fd, MemMapping *pMap) {
 #ifdef HAVE_POSIX_FILEMAP
     off_t start;
     size_t length, actual;
-    void* memPtr;
+    void *memPtr;
 
     assert(pMap != NULL);
 
@@ -141,12 +141,11 @@ int sysLoadFileInShmem(int fd, MemMapping* pMap)
  * On success, returns 0 and fills out "pMap".  On failure, returns a nonzero
  * value and does not disturb "pMap".
  */
-int sysMapFileInShmem(int fd, MemMapping* pMap)
-{
+int sysMapFileInShmem(int fd, MemMapping *pMap) {
 #ifdef HAVE_POSIX_FILEMAP
     off_t start;
     size_t length;
-    void* memPtr;
+    void *memPtr;
 
     assert(pMap != NULL);
 
@@ -156,7 +155,7 @@ int sysMapFileInShmem(int fd, MemMapping* pMap)
     memPtr = mmap(NULL, length, PROT_READ, MAP_FILE | MAP_SHARED, fd, start);
     if (memPtr == MAP_FAILED) {
         LOGW("mmap(%d, R, FILE|SHARED, %d, %d) failed: %s\n", (int) length,
-            fd, (int) start, strerror(errno));
+             fd, (int) start, strerror(errno));
         return -1;
     }
 
@@ -192,6 +191,16 @@ int sysMapFileInShmem(int fd, MemMapping* pMap)
 #endif
 }
 
+int sysMapByteArray(void *array, int size, MemMapping *pMap) {
+    assert(pMap != NULL);
+    if (array == NULL || size <= 0) {
+        return -1;
+    }
+    pMap->baseAddr = pMap->addr = array;
+    pMap->baseLength = pMap->length = size;
+    return 0;
+}
+
 /*
  * Map part of a file (from fd's current offset) into a shared, read-only
  * memory segment.
@@ -200,23 +209,22 @@ int sysMapFileInShmem(int fd, MemMapping* pMap)
  * value and does not disturb "pMap".
  */
 int sysMapFileSegmentInShmem(int fd, off_t start, long length,
-    MemMapping* pMap)
-{
+                             MemMapping *pMap) {
 #ifdef HAVE_POSIX_FILEMAP
     off_t dummy;
     size_t fileLength, actualLength;
     off_t actualStart;
     int adjust;
-    void* memPtr;
+    void *memPtr;
 
     assert(pMap != NULL);
 
     if (getFileStartAndLength(fd, &dummy, &fileLength) < 0)
         return -1;
 
-    if (start + length > (long)fileLength) {
+    if (start + length > (long) fileLength) {
         LOGW("bad segment: st=%d len=%ld flen=%d\n",
-            (int) start, length, (int) fileLength);
+             (int) start, length, (int) fileLength);
         return -1;
     }
 
@@ -226,22 +234,22 @@ int sysMapFileSegmentInShmem(int fd, off_t start, long length,
     actualLength = length + adjust;
 
     memPtr = mmap(NULL, actualLength, PROT_READ, MAP_FILE | MAP_SHARED,
-                fd, actualStart);
+                  fd, actualStart);
     if (memPtr == MAP_FAILED) {
         LOGW("mmap(%d, R, FILE|SHARED, %d, %d) failed: %s\n",
-            (int) actualLength, fd, (int) actualStart, strerror(errno));
+             (int) actualLength, fd, (int) actualStart, strerror(errno));
         return -1;
     }
 
     pMap->baseAddr = memPtr;
     pMap->baseLength = actualLength;
-    pMap->addr = (char*)memPtr + adjust;
+    pMap->addr = (char *) memPtr + adjust;
     pMap->length = length;
 
-    LOGVV("mmap seg (st=%d ln=%d): bp=%p bl=%d ad=%p ln=%d\n",
-        (int) start, (int) length,
-        pMap->baseAddr, (int) pMap->baseLength,
-        pMap->addr, (int) pMap->length);
+            LOGVV("mmap seg (st=%d ln=%d): bp=%p bl=%d ad=%p ln=%d\n",
+                  (int) start, (int) length,
+                  pMap->baseAddr, (int) pMap->baseLength,
+                  pMap->addr, (int) pMap->length);
 
     return 0;
 #else
@@ -253,15 +261,14 @@ int sysMapFileSegmentInShmem(int fd, off_t start, long length,
 /*
  * Release a memory mapping.
  */
-void sysReleaseShmem(MemMapping* pMap)
-{
+void sysReleaseShmem(MemMapping *pMap) {
 #ifdef HAVE_POSIX_FILEMAP
     if (pMap->baseAddr == NULL && pMap->baseLength == 0)
         return;
 
     if (munmap(pMap->baseAddr, pMap->baseLength) < 0) {
         LOGW("munmap(%p, %d) failed: %s\n",
-            pMap->baseAddr, (int)pMap->baseLength, strerror(errno));
+             pMap->baseAddr, (int) pMap->baseLength, strerror(errno));
     } else {
         LOGV("munmap(%p, %d) succeeded\n", pMap->baseAddr, pMap->baseLength);
         pMap->baseAddr = NULL;
@@ -280,8 +287,7 @@ void sysReleaseShmem(MemMapping* pMap)
 /*
  * Make a copy of a MemMapping.
  */
-void sysCopyMap(MemMapping* dst, const MemMapping* src)
-{
+void sysCopyMap(MemMapping *dst, const MemMapping *src) {
     memcpy(dst, src, sizeof(MemMapping));
 }
 

@@ -30,6 +30,8 @@ typedef struct JarFile {
     DvmDex*     pDvmDex;
 } JarFile;
 
+int dvmJarFileOpenByArray(void* array, int size,
+                          JarFile** ppJarFile, bool isBootstrap);
 /*
  * Open the Zip archive and get a list of the classfile entries.
  *

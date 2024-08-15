@@ -29,6 +29,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "../libcore/odex/boot_darwin_odex.h"
+
 #define kMinHeapStartSize   (1*1024*1024)
 #define kMinHeapSize        (2*1024*1024)
 #define kMaxHeapSize        (1*1024*1024*1024)
@@ -100,57 +102,57 @@ static void dvmUsage(const char *progName) {
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
-#ifdef WITH_MONITOR_TRACKING
-               " monitor_tracking"
-#endif
-#ifdef WITH_DEADLOCK_PREDICTION
-        " deadlock_prediction"
-#endif
-#ifdef WITH_HPROF
-        " hprof"
-#endif
-#ifdef WITH_HPROF_STACK
-        " hprof_stack"
-#endif
-#ifdef WITH_HPROF_STACK_UNREACHABLE
-        " hprof_stack_unreachable"
-#endif
-#ifdef WITH_ALLOC_LIMITS
-               " alloc_limits"
+                       #ifdef WITH_MONITOR_TRACKING
+                       " monitor_tracking"
+                       #endif
+                       #ifdef WITH_DEADLOCK_PREDICTION
+                       " deadlock_prediction"
+                       #endif
+                       #ifdef WITH_HPROF
+                       " hprof"
+                       #endif
+                       #ifdef WITH_HPROF_STACK
+                       " hprof_stack"
+                       #endif
+                       #ifdef WITH_HPROF_STACK_UNREACHABLE
+                       " hprof_stack_unreachable"
+                       #endif
+                       #ifdef WITH_ALLOC_LIMITS
+                       " alloc_limits"
 #endif
 #ifdef WITH_TRACKREF_CHECKS
-               " trackref_checks"
+            " trackref_checks"
 #endif
 #ifdef WITH_INSTR_CHECKS
-               " instr_checks"
+            " instr_checks"
 #endif
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
-               " extra_object_validation"
+            " extra_object_validation"
 #endif
 #ifdef WITH_DALVIK_ASSERT
-        " dalvik_assert"
+            " dalvik_assert"
 #endif
 #ifdef WITH_JNI_STACK_CHECK
-        " jni_stack_check"
+            " jni_stack_check"
 #endif
 #ifdef EASY_GDB
-               " easy_gdb"
+            " easy_gdb"
 #endif
 #ifdef CHECK_MUTEX
-        " check_mutex"
+            " check_mutex"
 #endif
 #ifdef PROFILE_FIELD_ACCESS
-        " profile_field_access"
+            " profile_field_access"
 #endif
 #ifdef DVM_TRACK_HEAP_MARKING
-        " track_heap_marking"
+            " track_heap_marking"
 #endif
 #if DVM_RESOLVER_CACHE == DVM_RC_REDUCING
-        " resolver_cache_reducing"
+            " resolver_cache_reducing"
 #elif DVM_RESOLVER_CACHE == DVM_RC_EXPANDING
-        " resolver_cache_expanding"
+            " resolver_cache_expanding"
 #elif DVM_RESOLVER_CACHE == DVM_RC_NO_CACHE
-        " resolver_cache_disabled"
+            " resolver_cache_disabled"
 #endif
     );
 #ifdef DVM_SHOW_EXCEPTION
@@ -324,7 +326,7 @@ static bool handleJdwpOption(const char *name, const char *value) {
         if (colon != NULL) {
             free(gDvm.jdwpHost);
             gDvm.jdwpHost = (char *) malloc(colon - value + 1);
-            strncpy(gDvm.jdwpHost, value, colon - value +1);
+            strncpy(gDvm.jdwpHost, value, colon - value + 1);
             gDvm.jdwpHost[colon - value] = '\0';
             value = colon + 1;
         }
@@ -411,7 +413,7 @@ static bool parseJdwpOptions(const char *str) {
     gDvm.jdwpConfigured = true;
     result = true;
 
-bail:
+    bail:
     free(mangle);
     return result;
 }
@@ -870,7 +872,7 @@ static void blockSignals() {
     }
 }
 
-const char *DEFAULT_BOOT_CLASSPATH = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin_dex_v5.jar";
+//const char *DEFAULT_BOOT_CLASSPATH = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin_dex_v5.jar";
 /*
  * VM initialization.  Pass in any options provided on the command line.
  * Do not pass in the class name or the options for the class.
@@ -897,7 +899,10 @@ int dvmStartup(int argc, const char *const argv[], bool ignoreUnrecognized,
      * Process the option flags (if any).
      */
     cc = dvmProcessOptions(argc, argv, ignoreUnrecognized);
-    gDvm.bootClassPathStr = DEFAULT_BOOT_CLASSPATH;
+    gDvm.bootClassPathStr = "(internal boot odex)";
+    gDvm.useRamBootClass = true;
+    gDvm.bootClassPathBaseAddr = boot_odex_bin;
+    gDvm.bootClassPathSize = 3267360;
     LOGD("[+] bootclasspath:%s\n", gDvm.bootClassPathStr);
     LOGD("[+] classpath:%s\n", gDvm.classPathStr);
     if (cc != 0) {
@@ -980,11 +985,11 @@ int dvmStartup(int argc, const char *const argv[], bool ignoreUnrecognized,
      * of main and nip the whole thing in the bud.
      */
     static const char *earlyClasses[] = {
-        "Ljava/lang/InternalError;",
-        "Ljava/lang/StackOverflowError;",
-        "Ljava/lang/UnsatisfiedLinkError;",
-        "Ljava/lang/NoClassDefFoundError;",
-        NULL
+            "Ljava/lang/InternalError;",
+            "Ljava/lang/StackOverflowError;",
+            "Ljava/lang/UnsatisfiedLinkError;",
+            "Ljava/lang/NoClassDefFoundError;",
+            NULL
     };
     const char **pClassName;
     for (pClassName = earlyClasses; *pClassName != NULL; pClassName++) {
@@ -1053,7 +1058,7 @@ int dvmStartup(int argc, const char *const argv[], bool ignoreUnrecognized,
 
     return 0;
 
-fail:
+    fail:
     dvmShutdown();
     return 1;
 }
@@ -1149,8 +1154,8 @@ bool dvmInitAfterZygote(void) {
     endJdwp = dvmGetRelativeTimeUsec();
 
     LOGV("thread-start heap=%d quit=%d jdwp=%d total=%d usec\n",
-         (int)(endHeap-startHeap), (int)(endQuit-startQuit),
-         (int)(endJdwp-startJdwp), (int)(endJdwp-startHeap));
+         (int) (endHeap - startHeap), (int) (endQuit - startQuit),
+         (int) (endJdwp - startJdwp), (int) (endJdwp - startHeap));
 
     return true;
 }
@@ -1281,7 +1286,7 @@ int dvmPrepForDexOpt(const char *bootClassPath, DexOptimizerMode dexOptMode,
 
     return 0;
 
-fail:
+    fail:
     dvmShutdown();
     return 1;
 }
@@ -1357,7 +1362,9 @@ void dvmShutdown(void) {
     dvmNativeShutdown();
     dvmInternalNativeShutdown();
 
-    free(gDvm.bootClassPathStr);
+    if (!gDvm.useRamBootClass) {
+        free(gDvm.bootClassPathStr);
+    }
     free(gDvm.classPathStr);
 
     freeAssertionCtrl();
@@ -1371,6 +1378,7 @@ void dvmShutdown(void) {
      * process.
      */
     memset(&gDvm, 0xcd, sizeof(gDvm));
+    LOGI("[+] dvmShutdown success!\n");
 }
 
 

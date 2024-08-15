@@ -20,18 +20,15 @@
 #include "HeapInternal.h"
 #include "HeapSource.h"
 #include "Float12.h"
-#include <log.h>
-#include <logd.h>
 
-int dvmGetHeapDebugInfo(HeapDebugInfoType info)
-{
+int dvmGetHeapDebugInfo(HeapDebugInfoType info) {
     switch (info) {
-    case kVirtualHeapSize:
-        return (int)dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
-    case kVirtualHeapAllocated:
-        return (int)dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
-    default:
-        return -1;
+        case kVirtualHeapSize:
+            return (int) dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
+        case kVirtualHeapAllocated:
+            return (int) dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
+        default:
+            return -1;
     }
 }
 
@@ -40,10 +37,10 @@ int dvmGetHeapDebugInfo(HeapDebugInfoType info)
  * short name into the provided event value.
  */
 #define PROC_NAME_LEN 5
-static void insertProcessName(long long *ep)
-{
+
+static void insertProcessName(long long *ep) {
     static bool foundRealName = false;
-    static char name[PROC_NAME_LEN] = { 'X', 'X', 'X', 'X', 'X' };
+    static char name[PROC_NAME_LEN] = {'X', 'X', 'X', 'X', 'X'};
     long long event = *ep;
 
     if (!foundRealName) {
@@ -96,11 +93,11 @@ static void insertProcessName(long long *ep)
     }
 
     event &= ~(0xffffffffffLL << 24);
-    event |= (long long)name[0] << 56;
-    event |= (long long)name[1] << 48;
-    event |= (long long)name[2] << 40;
-    event |= (long long)name[3] << 32;
-    event |= (long long)name[4] << 24;
+    event |= (long long) name[0] << 56;
+    event |= (long long) name[1] << 48;
+    event |= (long long) name[2] << 40;
+    event |= (long long) name[3] << 32;
+    event |= (long long) name[4] << 24;
 
     *ep = event;
 }
@@ -109,13 +106,12 @@ static void insertProcessName(long long *ep)
 #define EVENT_LOG_TAG_dvm_gc_info 20001
 #define EVENT_LOG_TAG_dvm_gc_madvise_info 20002
 
-void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
-{
+void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs) {
     const GcHeap *gcHeap = gDvm.gcHeap;
     size_t perHeapActualSize[HEAP_SOURCE_MAX_HEAP_COUNT],
-           perHeapAllowedSize[HEAP_SOURCE_MAX_HEAP_COUNT],
-           perHeapNumAllocated[HEAP_SOURCE_MAX_HEAP_COUNT],
-           perHeapSizeAllocated[HEAP_SOURCE_MAX_HEAP_COUNT];
+            perHeapAllowedSize[HEAP_SOURCE_MAX_HEAP_COUNT],
+            perHeapNumAllocated[HEAP_SOURCE_MAX_HEAP_COUNT],
+            perHeapSizeAllocated[HEAP_SOURCE_MAX_HEAP_COUNT];
     unsigned char eventBuf[1 + (1 + sizeof(long long)) * 4];
     size_t actualSize, allowedSize, numAllocated, sizeAllocated;
     size_t i;
@@ -124,18 +120,18 @@ void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
 
     /* Enough to quiet down gcc for unitialized variable check */
     perHeapActualSize[0] = perHeapAllowedSize[0] = perHeapNumAllocated[0] =
-                           perHeapSizeAllocated[0] = 0;
-    actualSize = dvmHeapSourceGetValue(HS_FOOTPRINT, perHeapActualSize, 
+    perHeapSizeAllocated[0] = 0;
+    actualSize = dvmHeapSourceGetValue(HS_FOOTPRINT, perHeapActualSize,
                                        HEAP_SOURCE_MAX_HEAP_COUNT);
-    allowedSize = dvmHeapSourceGetValue(HS_ALLOWED_FOOTPRINT, 
-                      perHeapAllowedSize, HEAP_SOURCE_MAX_HEAP_COUNT);
+    allowedSize = dvmHeapSourceGetValue(HS_ALLOWED_FOOTPRINT,
+                                        perHeapAllowedSize, HEAP_SOURCE_MAX_HEAP_COUNT);
     numAllocated = dvmHeapSourceGetValue(HS_OBJECTS_ALLOCATED,
-                      perHeapNumAllocated, HEAP_SOURCE_MAX_HEAP_COUNT);
+                                         perHeapNumAllocated, HEAP_SOURCE_MAX_HEAP_COUNT);
     sizeAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED,
-                      perHeapSizeAllocated, HEAP_SOURCE_MAX_HEAP_COUNT);
+                                          perHeapSizeAllocated, HEAP_SOURCE_MAX_HEAP_COUNT);
 
-    /* 
-     * Construct the the first 64-bit value to write to the log. 
+    /*
+     * Construct the the first 64-bit value to write to the log.
      * Global information:
      *
      * [63   ] Must be zero
@@ -146,8 +142,8 @@ void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
      */
     long long event0;
     event0 = 0LL << 63 |
-            (long long)intToFloat12(gcTimeMs) << 12 |
-            (long long)intToFloat12(sizeFreed);
+             (long long) intToFloat12(gcTimeMs) << 12 |
+             (long long) intToFloat12(sizeFreed);
     insertProcessName(&event0);
 
     /*
@@ -163,11 +159,11 @@ void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
      */
     long long event1;
     event1 = 2LL << 62 |
-            (long long)intToFloat12(numFreed) << 48 |
-            (long long)intToFloat12(actualSize) << 36 |
-            (long long)intToFloat12(allowedSize) << 24 |
-            (long long)intToFloat12(numAllocated) << 12 |
-            (long long)intToFloat12(sizeAllocated);
+             (long long) intToFloat12(numFreed) << 48 |
+             (long long) intToFloat12(actualSize) << 36 |
+             (long long) intToFloat12(allowedSize) << 24 |
+             (long long) intToFloat12(numAllocated) << 12 |
+             (long long) intToFloat12(sizeAllocated);
 
     /*
      * Report the current state of the zygote heap(s).
@@ -212,11 +208,11 @@ void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
         zSizeAllocated += perHeapSizeAllocated[hh];
     }
     event2 = 3LL << 62 |
-            (long long)intToFloat12(softLimit) << 48 |
-            (long long)intToFloat12(zActualSize) << 36 |
-            (long long)intToFloat12(zAllowedSize) << 24 |
-            (long long)intToFloat12(zNumAllocated) << 12 |
-            (long long)intToFloat12(zSizeAllocated);
+             (long long) intToFloat12(softLimit) << 48 |
+             (long long) intToFloat12(zActualSize) << 36 |
+             (long long) intToFloat12(zAllowedSize) << 24 |
+             (long long) intToFloat12(zNumAllocated) << 12 |
+             (long long) intToFloat12(zSizeAllocated);
 
     /*
      * Report the current external allocation stats and the native heap
@@ -232,35 +228,17 @@ void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
     size_t externalLimit, externalBytesAllocated;
     size_t uordblks, footprint;
 
-#if 0
-    /*
-     * This adds 2-5msec to the GC cost on a DVT, or about 2-3% of the cost
-     * of a GC, so it's not horribly expensive but it's not free either.
-     */
-    extern size_t dlmalloc_footprint(void);
-    struct mallinfo mi;
-    //u8 start, end;
-
-    //start = dvmGetRelativeTimeNsec();
-    mi = mallinfo();
-    uordblks = mi.uordblks;
-    footprint = dlmalloc_footprint();
-    //end = dvmGetRelativeTimeNsec();
-    //LOGD("mallinfo+footprint took %dusec; used=%zd footprint=%zd\n",
-    //    (int)((end - start) / 1000), mi.uordblks, footprint);
-#else
     uordblks = footprint = 0;
-#endif
 
     externalLimit =
             dvmHeapSourceGetValue(HS_EXTERNAL_LIMIT, NULL, 0);
     externalBytesAllocated =
             dvmHeapSourceGetValue(HS_EXTERNAL_BYTES_ALLOCATED, NULL, 0);
     event3 =
-            (long long)intToFloat12(footprint) << 36 |
-            (long long)intToFloat12(uordblks) << 24 |
-            (long long)intToFloat12(externalLimit) << 12 |
-            (long long)intToFloat12(externalBytesAllocated);
+            (long long) intToFloat12(footprint) << 36 |
+            (long long) intToFloat12(uordblks) << 24 |
+            (long long) intToFloat12(externalLimit) << 12 |
+            (long long) intToFloat12(externalBytesAllocated);
 
     /* Build the event data.
      * [ 0: 0] item count (4)
@@ -291,8 +269,7 @@ void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
     // fixme not impl.
 }
 
-void dvmLogMadviseStats(size_t madvisedSizes[], size_t arrayLen)
-{
+void dvmLogMadviseStats(size_t madvisedSizes[], size_t arrayLen) {
     unsigned char eventBuf[1 + (1 + sizeof(int)) * 2];
     size_t total, zyg;
     size_t firstHeap, i;
@@ -330,76 +307,3 @@ void dvmLogMadviseStats(size_t madvisedSizes[], size_t arrayLen)
     //         EVENT_TYPE_LIST, eventBuf, sizeof(eventBuf));
     // not impl
 }
-
-#if 0
-#include <errno.h>
-#include <stdio.h>
-
-typedef struct HeapDumpContext {
-    FILE *fp;
-    void *chunkStart;
-    size_t chunkLen;
-    bool chunkFree;
-} HeapDumpContext;
-
-static void
-dump_context(const HeapDumpContext *ctx)
-{
-    fprintf(ctx->fp, "0x%08x %12.12zd %s\n", (u_int64_t)ctx->chunkStart,
-            ctx->chunkLen, ctx->chunkFree ? "FREE" : "USED");
-}
-
-static void
-heap_chunk_callback(const void *chunkptr, size_t chunklen,
-                    const void *userptr, size_t userlen, void *arg)
-{
-    HeapDumpContext *ctx = (HeapDumpContext *)arg;
-    bool chunkFree = (userptr == NULL);
-
-    if (chunkFree != ctx->chunkFree ||
-            ((char *)ctx->chunkStart + ctx->chunkLen) != chunkptr)
-    {
-        /* The new chunk is of a different type or isn't
-         * contiguous with the current chunk.  Dump the
-         * old one and start a new one.
-         */
-        if (ctx->chunkStart != NULL) {
-            /* It's not the first chunk. */
-            dump_context(ctx);
-        }
-        ctx->chunkStart = (void *)chunkptr;
-        ctx->chunkLen = chunklen;
-        ctx->chunkFree = chunkFree;
-    } else {
-        /* Extend the current chunk.
-         */
-        ctx->chunkLen += chunklen;
-    }
-}
-
-/* Dumps free and used ranges, as text, to the named file.
- */
-void dvmDumpHeapToFile(const char *fileName)
-{
-    HeapDumpContext ctx;
-    FILE *fp;
-
-    fp = fopen(fileName, "w+");
-    if (fp == NULL) {
-        LOGE("Can't open %s for writing: %s\n", fileName, strerror(errno));
-        return;
-    }
-    LOGW("Dumping heap to %s...\n", fileName);
-
-    fprintf(fp, "==== Dalvik heap dump ====\n");
-    memset(&ctx, 0, sizeof(ctx));
-    ctx.fp = fp;
-    dvmHeapSourceWalk(heap_chunk_callback, (void *)&ctx);
-    dump_context(&ctx);
-    fprintf(fp, "==== end heap dump ====\n");
-
-    LOGW("Dumped heap to %s.\n", fileName);
-
-    fclose(fp);
-}
-#endif

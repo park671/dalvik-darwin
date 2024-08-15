@@ -60,7 +60,14 @@ typedef struct DvmDex {
     MemMapping          memMap;
 } DvmDex;
 
-
+/*
+ * Given an byte array & size(array length) for an open "optimized" DEX file, map it into
+ * memory and parse the contents.
+ *
+ * On success, returns 0 and sets "*ppDvmDex" to a newly-allocated DvmDex.
+ * On failure, returns a meaningful error code [currently just -1].
+ */
+int dvmDexFileOpenFromArray(void* array, int size, DvmDex** ppDvmDex);
 /*
  * Given a file descriptor for an open "optimized" DEX file, map it into
  * memory and parse the contents.
