@@ -19,7 +19,6 @@
  */
 #include "Dalvik.h"
 #include "test/Test.h"
-#include "mterp/Mterp.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -872,7 +871,7 @@ static void blockSignals() {
     }
 }
 
-//const char *DEFAULT_BOOT_CLASSPATH = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin_dex_v5.jar";
+//const char *DEFAULT_BOOT_CLASSPATH = "/Users/parkyu/CLionProjects/dalvik-darwin-c99/libcore/output/boot_darwin_dex_v5_.jar";
 /*
  * VM initialization.  Pass in any options provided on the command line.
  * Do not pass in the class name or the options for the class.
